@@ -1,6 +1,8 @@
-# Design data consists of LTSpice models and Octave/Matlab scripts.
+# Simulation and design
 
-https://github.com/bubnikv/BlinkySWR/blob/master/design/ltspice/spicemodels_schottky_diodes.txt
+The BlinkySWR DC power recovery and SWR sampling circuits were simulated using the excellent free, unfortunately not open source [LTSpice](https://www.analog.com/en/design-center/design-tools-and-calculators/ltspice-simulator.html) tool by Linear Technologies. Installers for Windows and OSX are provided, and Linear Technologies makes sure that the Windows build runs under Wine on Linux.
+
+The forward and reverse power is sampled by a hot carrier Shottky diode 1N5711, and the voltage drop at the sampling diode follows roughly the [Shockley diode equation](https://en.wikipedia.org/wiki/Shockley_diode_equation). We take an approach of modelling the sampling circuit in LTSpice using the SPICE model of the 1N5711 provided by [Diodes Incorporated](https://www.diodes.com/design/tools/spice-models/), providing a richer description of the diode behaviour than the [Shockley diode equation](https://en.wikipedia.org/wiki/Shockley_diode_equation) parameters.
 
 [ltspice/spicemodels_schottky_diodes.txt](ltspice/spicemodels_schottky_diodes.txt) - SPICE model of 1N5711 diode, from [ltwiki.org](http://ltwiki.org/files/LTspiceIV/Vendor%20List/Diodes%20Incorporated/Spice/spicemodels_schottky_diodes.txt)
 
