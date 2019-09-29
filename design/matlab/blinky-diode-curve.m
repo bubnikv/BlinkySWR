@@ -29,7 +29,7 @@ for i = 1:steps
 	id_max(i) = max(abs(variable_mat(5, :))) * 1000;
 end
 
-save blinky-diode-curve.mat vsrc_max vload_max vadc_mean id_max
+save "blinky-diode-curve.mat" vsrc_max vload_max vadc_mean id_max
 
 vadc_corr = vsrc_max * 2.2 / ((39+2.2) * 4) - vadc_mean;
 plot(vadc_mean, vadc_corr)
@@ -40,7 +40,7 @@ offset = vadc_corr(cntr) - vadc_mean(cntr) * slope;
 hold
 plot(vadc_mean, vadc_mean * slope + offset)
 
-cntr2 = ceil(cntr/2);
-slope2 = (vadc_corr(cntr) - vadc_corr(cntr2)) / (vadc_mean(cntr) - vadc_mean(cntr2));
-offset2 = vadc_corr(cntr2) - vadc_mean(cntr2) * slope2;
-plot(vadc_mean, vadc_mean * slope2 + offset2)
+#cntr2 = ceil(cntr/2);
+#slope2 = (vadc_corr(cntr) - vadc_corr(cntr2)) / (vadc_mean(cntr) - vadc_mean(cntr2));
+#offset2 = vadc_corr(cntr2) - vadc_mean(cntr2) * slope2;
+#plot(vadc_mean, vadc_mean * slope2 + offset2)
