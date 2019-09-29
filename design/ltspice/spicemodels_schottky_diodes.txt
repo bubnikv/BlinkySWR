@@ -1,0 +1,7 @@
+*SRC=1N5711;DI_1N5711;Diodes;Si;  70.0V  15.0mA  1.00ns   Diodes Inc. -
+.MODEL DI_1N5711 D  ( IS=315n RS=2.80 BV=70.0 IBV=10.0u
++ CJO=2.00p  M=0.333 N=2.03 TT=1.44n )
+
+*SRC=1N5711_2;DI_1N5711_2;Diodes;Si;  70.0V  15.0mA  1.00ns   Diodes Inc. -
+.MODEL DI_1N5711_2 D  ( IS=315n RS=2.80 BV=70.0 IBV=10.0u
++ CJO=2.00p  M=0.333 N=2.03 TT=1.44n )

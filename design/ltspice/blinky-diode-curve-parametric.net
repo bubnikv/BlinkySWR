@@ -1,0 +1,23 @@
+* C:\data\src\BlinkySWR\design\ltspice\blinky-diode-curve-parametric.asc
+V1 src_hi src_lo SINE(0 {Vsrc} 7MEG)
+R1 load_hi src_hi 25
+C1 N001 0 1n
+D1 load_hi N001 DI_1N5711
+R2 N003 src_lo 25
+R3 0 load_hi 50
+R4 N003 0 50
+R5 load_hi N003 100
+R6 N002 N001 39k
+R7 0 N002 2.2k
+R_ADC N002 ADC 10k
+C_SH ADC 0 10p
+C2 N002 0 1n
+.model D D
+.lib C:\Users\bubnivoj\Documents\LTspiceXVII\lib\cmp\standard.dio
+.tran 0.00000001 .001 0.000999
+.include spicemodels_schottky_diodes.txt
+.options plotwinsize=0
+.step param Vsrc 0 100 0.5
+.save V(src_hi) V(src_lo) V(load_hi) V(ADC) I(D1)
+.backanno
+.end
