@@ -10,6 +10,10 @@ The forward and reverse power is sampled by a hot carrier Shottky diode 1N5711, 
 
 [ltspice/blinky-diode-curve-parametric.asc](ltspice/blinky-diode-curve-parametric.asc) is an LTSpice model of input power sampling circuit including the ATTiny13A A/D sampling circuit, parametrized with SPICE STEP command to produce simulations for with the SWR bridge open (SWR infinity, transceiver sees SWR 1:2 and it produces maximum peak voltage). The .raw file produced by LTSpice contains transient analysis curves for input peak voltages from 0 to 50V peak. The .raw file is processed by [matlab/blinky-diode-curve.m](matlab/blinky-diode-curve.m) script to produce [matlab/blinky-diode-curve.mat](matlab/blinky-diode-curve.mat) sampling diode correction curve.
 
+The following image shows the simulated diode correction curve. The voltage at the X axis represents the A/D reading, while the Y axis represents the diode voltage drop, which needs to be added to the A/D reading to get the sampled voltage. Blue curve represents the correction curve at room temperature for a typical 1N5711 diode, while the red line represents a linear interpolation of the curve. It is clear, that the diode voltage drop is far from 0.3V for the hot carrier 1N5711 diode, usually much higher (0.5V to 0.9V).
+
+![1N5711 diode correction curve](matlab/blinky-diode-curve.png)
+
 ### Other models
 
 [ltspice/blinky-power-supply.asc](ltspice/blinky-power-supply.asc) - model of the DC power recovery, to be used for assessing currents through the diodes, loading of the transceiver and harmonics created by the loading, driven with 7MHz / 1W source.
