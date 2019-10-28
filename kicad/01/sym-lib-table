@@ -1,0 +1,3 @@
+(sym_lib_table
+  (lib (name iak-swr-meter-rescue)(type Legacy)(uri ${KIPRJMOD}/iak-swr-meter-rescue.lib)(options "")(descr ""))
+)

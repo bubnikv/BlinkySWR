@@ -1,0 +1,914 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export version="D">
+  <design>
+    <source>/home/dan/kicad/hra/iak-swr-meter/02/iak-swr-meter.sch</source>
+    <date>St 2. října 2019, 20:39:22 CEST</date>
+    <tool>Eeschema 5.1.4+dfsg1-1~bpo10+1</tool>
+    <sheet number="1" name="/" tstamps="/">
+      <title_block>
+        <title>BlinkySWR</title>
+        <company>OK1IAK</company>
+        <rev>0.1</rev>
+        <date>2019-10-02</date>
+        <source>iak-swr-meter.sch</source>
+        <comment number="1" value="GNU General Public License v2.0"/>
+        <comment number="2" value="https://www.gnu.org/licenses/old-licenses/gpl-2.0.html"/>
+        <comment number="3" value=""/>
+        <comment number="4" value=""/>
+      </title_block>
+    </sheet>
+  </design>
+  <components>
+    <comp ref="R11">
+      <value>39k</value>
+      <footprint>Resistors_SMD:R_0805</footprint>
+      <fields>
+        <field name="req">0,125W/1%</field>
+      </fields>
+      <libsource lib="device" part="R" description="Resistor"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D85193A</tstamp>
+    </comp>
+    <comp ref="R9">
+      <value>100R</value>
+      <footprint>Resistors_SMD:R_1206</footprint>
+      <datasheet>https://www.tme.eu/cz/details/hp06-100r1%25/rezistory-smd-1206/royal-ohm/hp06w2f1000t5e/</datasheet>
+      <fields>
+        <field name="req">0,5W/1%</field>
+      </fields>
+      <libsource lib="device" part="R" description="Resistor"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D8635B7</tstamp>
+    </comp>
+    <comp ref="D10">
+      <value>1N5711</value>
+      <footprint>Diodes_SMD:SOD-123</footprint>
+      <datasheet>https://www.tme.eu/cz/details/1n5711w-7-f/diody-schottky-smd/diodes-incorporated/</datasheet>
+      <fields>
+        <field name="req"> 70V/15mA/1ns/333mW/2pF</field>
+      </fields>
+      <libsource lib="device" part="D_Schottky_Small_ALT" description="Schottky diode, small symbol, alternativ symbol"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D8652E5</tstamp>
+    </comp>
+    <comp ref="C6">
+      <value>1n</value>
+      <footprint>Capacitors_SMD:C_0805</footprint>
+      <datasheet>https://www.tme.eu/cz/details/cl21b102kcannnc/kondenzatory-mlcc-smd-0805/samsung/</datasheet>
+      <fields>
+        <field name="req">100V/X7R/10%</field>
+      </fields>
+      <libsource lib="device" part="C_Small" description="Unpolarized capacitor"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D866105</tstamp>
+    </comp>
+    <comp ref="R12">
+      <value>2k2</value>
+      <footprint>Resistors_SMD:R_0805</footprint>
+      <fields>
+        <field name="req">0,125W/1%</field>
+      </fields>
+      <libsource lib="device" part="R" description="Resistor"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D88B214</tstamp>
+    </comp>
+    <comp ref="IC1">
+      <value>ATTINY13A-SSH</value>
+      <footprint>Housings_SOIC:SOIC-8_3.9x4.9mm_Pitch1.27mm</footprint>
+      <datasheet>https://www.tme.eu/cz/details/attiny13a-ssh/rodina-avr-8-bitu/microchip-atmel/</datasheet>
+      <fields>
+        <field name="req">64B/1kB</field>
+      </fields>
+      <libsource lib="atmel" part="ATTINY13A-SS" description="SO8, 1k Flash, 64B SRAM, 64B EEPROM, Debug Wire"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D9E69B8</tstamp>
+    </comp>
+    <comp ref="C8">
+      <value>100n</value>
+      <footprint>Capacitors_SMD:C_0805</footprint>
+      <datasheet>https://www.tme.eu/cz/details/cl21b102kcannnc/kondenzatory-mlcc-smd-0805/samsung/</datasheet>
+      <fields>
+        <field name="req">100V/X7R/10%</field>
+      </fields>
+      <libsource lib="device" part="C_Small" description="Unpolarized capacitor"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D9E805C</tstamp>
+    </comp>
+    <comp ref="R8">
+      <value>10k</value>
+      <footprint>Resistors_SMD:R_0805</footprint>
+      <fields>
+        <field name="req">0,125W/1%</field>
+      </fields>
+      <libsource lib="device" part="R" description="Resistor"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5DA1E2A5</tstamp>
+    </comp>
+    <comp ref="D1">
+      <value>OF-SMD2012HR</value>
+      <footprint>Diodes_SMD:D_0805</footprint>
+      <datasheet>https://www.tme.eu/cz/details/of-smd2012hr/diody-led-smd-barevne/optoflash/</datasheet>
+      <fields>
+        <field name="req">460÷700mcd/RED/120°/1,8÷2,4V</field>
+      </fields>
+      <libsource lib="iak-swr-meter-rescue" part="LED_Small-Device-modular-bed-controller-01-rescue-modular-bed-controller-02-rescue-modular-bed-controller-LED-02-rescue-modular-bed-controller-LED-03.0-rescue" description=""/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5CFB515E</tstamp>
+    </comp>
+    <comp ref="R1">
+      <value>500R</value>
+      <footprint>Resistors_SMD:R_0805</footprint>
+      <fields>
+        <field name="req">0,125W/1%</field>
+      </fields>
+      <libsource lib="device" part="R" description="Resistor"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5DA6D099</tstamp>
+    </comp>
+    <comp ref="R2">
+      <value>500R</value>
+      <footprint>Resistors_SMD:R_0805</footprint>
+      <fields>
+        <field name="req">0,125W/1%</field>
+      </fields>
+      <libsource lib="device" part="R" description="Resistor"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5DA78C4E</tstamp>
+    </comp>
+    <comp ref="R3">
+      <value>500R</value>
+      <footprint>Resistors_SMD:R_0805</footprint>
+      <fields>
+        <field name="req">0,125W/1%</field>
+      </fields>
+      <libsource lib="device" part="R" description="Resistor"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5DA81D0B</tstamp>
+    </comp>
+    <comp ref="D3">
+      <value>OF-SMD2012HR</value>
+      <footprint>Diodes_SMD:D_0805</footprint>
+      <datasheet>https://www.tme.eu/cz/details/of-smd2012hr/diody-led-smd-barevne/optoflash/</datasheet>
+      <fields>
+        <field name="req">460÷700mcd/RED/120°/1,8÷2,4V</field>
+      </fields>
+      <libsource lib="iak-swr-meter-rescue" part="LED_Small-Device-modular-bed-controller-01-rescue-modular-bed-controller-02-rescue-modular-bed-controller-LED-02-rescue-modular-bed-controller-LED-03.0-rescue" description=""/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D8F0AC2</tstamp>
+    </comp>
+    <comp ref="D5">
+      <value>OF-SMD2012HR</value>
+      <footprint>Diodes_SMD:D_0805</footprint>
+      <datasheet>https://www.tme.eu/cz/details/of-smd2012hr/diody-led-smd-barevne/optoflash/</datasheet>
+      <fields>
+        <field name="req">460÷700mcd/RED/120°/1,8÷2,4V</field>
+      </fields>
+      <libsource lib="iak-swr-meter-rescue" part="LED_Small-Device-modular-bed-controller-01-rescue-modular-bed-controller-02-rescue-modular-bed-controller-LED-02-rescue-modular-bed-controller-LED-03.0-rescue" description=""/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D8F1165</tstamp>
+    </comp>
+    <comp ref="D6">
+      <value>OF-SMD2012HR</value>
+      <footprint>Diodes_SMD:D_0805</footprint>
+      <datasheet>https://www.tme.eu/cz/details/of-smd2012hr/diody-led-smd-barevne/optoflash/</datasheet>
+      <fields>
+        <field name="req">460÷700mcd/RED/120°/1,8÷2,4V</field>
+      </fields>
+      <libsource lib="iak-swr-meter-rescue" part="LED_Small-Device-modular-bed-controller-01-rescue-modular-bed-controller-02-rescue-modular-bed-controller-LED-02-rescue-modular-bed-controller-LED-03.0-rescue" description=""/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D8F1C8E</tstamp>
+    </comp>
+    <comp ref="D4">
+      <value>OF-SMD2012HR</value>
+      <footprint>Diodes_SMD:D_0805</footprint>
+      <datasheet>https://www.tme.eu/cz/details/of-smd2012hr/diody-led-smd-barevne/optoflash/</datasheet>
+      <fields>
+        <field name="req">460÷700mcd/RED/120°/1,8÷2,4V</field>
+      </fields>
+      <libsource lib="iak-swr-meter-rescue" part="LED_Small-Device-modular-bed-controller-01-rescue-modular-bed-controller-02-rescue-modular-bed-controller-LED-02-rescue-modular-bed-controller-LED-03.0-rescue" description=""/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D8F6B3E</tstamp>
+    </comp>
+    <comp ref="D2">
+      <value>OF-SMD2012HR</value>
+      <footprint>Diodes_SMD:D_0805</footprint>
+      <datasheet>https://www.tme.eu/cz/details/of-smd2012hr/diody-led-smd-barevne/optoflash/</datasheet>
+      <fields>
+        <field name="req">460÷700mcd/RED/120°/1,8÷2,4V</field>
+      </fields>
+      <libsource lib="iak-swr-meter-rescue" part="LED_Small-Device-modular-bed-controller-01-rescue-modular-bed-controller-02-rescue-modular-bed-controller-LED-02-rescue-modular-bed-controller-LED-03.0-rescue" description=""/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D8F70F1</tstamp>
+    </comp>
+    <comp ref="R10">
+      <value>100R</value>
+      <footprint>Resistors_SMD:R_1206</footprint>
+      <datasheet>https://www.tme.eu/cz/details/hp06-100r1%25/rezistory-smd-1206/royal-ohm/hp06w2f1000t5e/</datasheet>
+      <fields>
+        <field name="req">0,5W/1%</field>
+      </fields>
+      <libsource lib="device" part="R" description="Resistor"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D8FEA42</tstamp>
+    </comp>
+    <comp ref="R13">
+      <value>100R</value>
+      <footprint>Resistors_SMD:R_1206</footprint>
+      <datasheet>https://www.tme.eu/cz/details/hp06-100r1%25/rezistory-smd-1206/royal-ohm/hp06w2f1000t5e/</datasheet>
+      <fields>
+        <field name="req">0,5W/1%</field>
+      </fields>
+      <libsource lib="device" part="R" description="Resistor"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D9036E2</tstamp>
+    </comp>
+    <comp ref="R7">
+      <value>100R</value>
+      <footprint>Resistors_SMD:R_1206</footprint>
+      <datasheet>https://www.tme.eu/cz/details/hp06-100r1%25/rezistory-smd-1206/royal-ohm/hp06w2f1000t5e/</datasheet>
+      <fields>
+        <field name="req">0,5W/1%</field>
+      </fields>
+      <libsource lib="device" part="R" description="Resistor"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D903B2B</tstamp>
+    </comp>
+    <comp ref="R14">
+      <value>100R</value>
+      <footprint>Resistors_SMD:R_1206</footprint>
+      <datasheet>https://www.tme.eu/cz/details/hp06-100r1%25/rezistory-smd-1206/royal-ohm/hp06w2f1000t5e/</datasheet>
+      <fields>
+        <field name="req">0,5W/1%</field>
+      </fields>
+      <libsource lib="device" part="R" description="Resistor"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D90408A</tstamp>
+    </comp>
+    <comp ref="R15">
+      <value>100R</value>
+      <footprint>Resistors_SMD:R_1206</footprint>
+      <datasheet>https://www.tme.eu/cz/details/hp06-100r1%25/rezistory-smd-1206/royal-ohm/hp06w2f1000t5e/</datasheet>
+      <fields>
+        <field name="req">0,5W/1%</field>
+      </fields>
+      <libsource lib="device" part="R" description="Resistor"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D90456D</tstamp>
+    </comp>
+    <comp ref="C9">
+      <value>1000u</value>
+      <footprint>Capacitors_THT:CP_Radial_D10.0mm_P5.00mm</footprint>
+      <datasheet>https://www.tme.eu/cz/details/pf0j102mnn1012/elektrolyticke-kondenzatory-tht-105degc/elite/</datasheet>
+      <fields>
+        <field name="req">6,3VDC/Ø10x12,5mm/±20%</field>
+      </fields>
+      <libsource lib="device" part="CP_Small" description="Polarised capacitor"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D93586C</tstamp>
+    </comp>
+    <comp ref="C7">
+      <value>1n</value>
+      <footprint>Capacitors_SMD:C_0805</footprint>
+      <datasheet>https://www.tme.eu/cz/details/cl21b102kcannnc/kondenzatory-mlcc-smd-0805/samsung/</datasheet>
+      <fields>
+        <field name="req">100V/X7R/10%</field>
+      </fields>
+      <libsource lib="device" part="C_Small" description="Unpolarized capacitor"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D9E7AD7</tstamp>
+    </comp>
+    <comp ref="C1">
+      <value>1n</value>
+      <footprint>Capacitors_SMD:C_0805</footprint>
+      <datasheet>https://www.tme.eu/cz/details/cl21b102kcannnc/kondenzatory-mlcc-smd-0805/samsung/</datasheet>
+      <fields>
+        <field name="req">100V/X7R/10%</field>
+      </fields>
+      <libsource lib="device" part="C_Small" description="Unpolarized capacitor"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D989AC6</tstamp>
+    </comp>
+    <comp ref="U1">
+      <value>HT7130-1</value>
+      <footprint>TO_SOT_Packages_SMD:SOT-23-5</footprint>
+      <datasheet>https://www.gme.cz/ht7130-1-sot23-5-holtek</datasheet>
+      <fields>
+        <field name="req">4-24V/3V/100mVdrop/30mA</field>
+      </fields>
+      <libsource lib="regul" part="LM117K" description="1,5A 35V Adjustable Linear Regulator, TO-3"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D978DD6</tstamp>
+    </comp>
+    <comp ref="R6">
+      <value>2k2</value>
+      <footprint>Resistors_SMD:R_0805</footprint>
+      <fields>
+        <field name="req">0,125W/1%</field>
+      </fields>
+      <libsource lib="device" part="R" description="Resistor"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D9427BC</tstamp>
+    </comp>
+    <comp ref="R5">
+      <value>39k</value>
+      <footprint>Resistors_SMD:R_0805</footprint>
+      <fields>
+        <field name="req">0,125W/1%</field>
+      </fields>
+      <libsource lib="device" part="R" description="Resistor"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D9427AF</tstamp>
+    </comp>
+    <comp ref="D7">
+      <value>1N5711</value>
+      <footprint>Diodes_SMD:SOD-123</footprint>
+      <datasheet>https://www.tme.eu/cz/details/1n5711w-7-f/diody-schottky-smd/diodes-incorporated/</datasheet>
+      <fields>
+        <field name="req"> 70V/15mA/1ns/333mW/2pF</field>
+      </fields>
+      <libsource lib="device" part="D_Schottky_Small_ALT" description="Schottky diode, small symbol, alternativ symbol"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D91AD3F</tstamp>
+    </comp>
+    <comp ref="C4">
+      <value>1n</value>
+      <footprint>Capacitors_SMD:C_0805</footprint>
+      <datasheet>https://www.tme.eu/cz/details/cl21b102kcannnc/kondenzatory-mlcc-smd-0805/samsung/</datasheet>
+      <fields>
+        <field name="req">100V/X7R/10%</field>
+      </fields>
+      <libsource lib="device" part="C_Small" description="Unpolarized capacitor"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D91402A</tstamp>
+    </comp>
+    <comp ref="C2">
+      <value>1n</value>
+      <footprint>Capacitors_SMD:C_0805</footprint>
+      <datasheet>https://www.tme.eu/cz/details/cl21b102kcannnc/kondenzatory-mlcc-smd-0805/samsung/</datasheet>
+      <fields>
+        <field name="req">100V/X7R/10%</field>
+      </fields>
+      <libsource lib="device" part="C_Small" description="Unpolarized capacitor"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D8FBFE2</tstamp>
+    </comp>
+    <comp ref="R4">
+      <value>1k</value>
+      <footprint>Resistors_SMD:R_0805</footprint>
+      <fields>
+        <field name="req">0,125W/1%</field>
+      </fields>
+      <libsource lib="device" part="R" description="Resistor"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D8F6263</tstamp>
+    </comp>
+    <comp ref="C3">
+      <value>1n</value>
+      <footprint>Capacitors_SMD:C_0805</footprint>
+      <datasheet>https://www.tme.eu/cz/details/cl21b102kcannnc/kondenzatory-mlcc-smd-0805/samsung/</datasheet>
+      <fields>
+        <field name="req">100V/X7R/10%</field>
+      </fields>
+      <libsource lib="device" part="C_Small" description="Unpolarized capacitor"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D89CA59</tstamp>
+    </comp>
+    <comp ref="D9">
+      <value>1N5711</value>
+      <footprint>Diodes_SMD:SOD-123</footprint>
+      <datasheet>https://www.tme.eu/cz/details/1n5711w-7-f/diody-schottky-smd/diodes-incorporated/</datasheet>
+      <fields>
+        <field name="req"> 70V/15mA/1ns/333mW/2pF</field>
+      </fields>
+      <libsource lib="device" part="D_Schottky_Small_ALT" description="Schottky diode, small symbol, alternativ symbol"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D89791A</tstamp>
+    </comp>
+    <comp ref="D8">
+      <value>1N5711</value>
+      <footprint>Diodes_SMD:SOD-123</footprint>
+      <datasheet>https://www.tme.eu/cz/details/1n5711w-7-f/diody-schottky-smd/diodes-incorporated/</datasheet>
+      <fields>
+        <field name="req"> 70V/15mA/1ns/333mW/2pF</field>
+      </fields>
+      <libsource lib="device" part="D_Schottky_Small_ALT" description="Schottky diode, small symbol, alternativ symbol"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D892322</tstamp>
+    </comp>
+    <comp ref="J1">
+      <value>SMA-15</value>
+      <footprint>ok1hra:SMA-90</footprint>
+      <datasheet>https://www.tme.eu/cz/details/sma-15/konektory-sma-smb-smc/</datasheet>
+      <fields>
+        <field name="req">SMA/90°/female/gold-plated</field>
+      </fields>
+      <libsource lib="ok1hra" part="CINCH" description=""/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>58884C5F</tstamp>
+    </comp>
+    <comp ref="C5">
+      <value>1n</value>
+      <footprint>Capacitors_SMD:C_0805</footprint>
+      <datasheet>https://www.tme.eu/cz/details/cl21b102kcannnc/kondenzatory-mlcc-smd-0805/samsung/</datasheet>
+      <fields>
+        <field name="req">100V/X7R/10%</field>
+      </fields>
+      <libsource lib="device" part="C_Small" description="Unpolarized capacitor"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D9427C7</tstamp>
+    </comp>
+    <comp ref="L1">
+      <value>FT37-43</value>
+      <footprint>ok1hra:FT37-43-common-mode</footprint>
+      <datasheet>https://www.rf-microwave.com/en/nbp/nmp/toroid-for-broadband-emi-filters/ft-37-43/</datasheet>
+      <fields>
+        <field name="note">http://www.toroids.info/FT37-43.php</field>
+        <field name="req">2x8 turns</field>
+      </fields>
+      <libsource lib="ok1hra" part="Common-mode-choke" description=""/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D96D9BF</tstamp>
+    </comp>
+    <comp ref="JP1">
+      <value>BYPASS</value>
+      <footprint>Pin_Headers:Pin_Header_Straight_1x03</footprint>
+      <libsource lib="device" part="Jumper_NC_Dual" description="Dual Jumper, normally closed"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D964D63</tstamp>
+    </comp>
+    <comp ref="JP2">
+      <value>BYPASS</value>
+      <footprint>Pin_Headers:Pin_Header_Straight_1x03</footprint>
+      <libsource lib="device" part="Jumper_NC_Dual" description="Dual Jumper, normally closed"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D97F81F</tstamp>
+    </comp>
+    <comp ref="P1">
+      <value>CONN_02X04</value>
+      <footprint>Pin_Headers:Pin_Header_Straight_2x04</footprint>
+      <libsource lib="conn" part="CONN_02X04" description="Connector, double row, 02x04"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D9A4141</tstamp>
+    </comp>
+    <comp ref="C10">
+      <value>C_Variable</value>
+      <footprint>Capacitors_THT:C_Axial_L5.1mm_D3.1mm_P10.00mm_Horizontal</footprint>
+      <libsource lib="device" part="C_Variable" description="Variable capacitor"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D9C18B8</tstamp>
+    </comp>
+    <comp ref="T1">
+      <value>T50-6</value>
+      <footprint>ok1hra:T50-6-4</footprint>
+      <fields>
+        <field name="note">http://www.toroids.info/T50-6.php</field>
+      </fields>
+      <libsource lib="ok1hra" part="Toroid-4in" description=""/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D9DF5D1</tstamp>
+    </comp>
+    <comp ref="P2">
+      <value>CONN_01X01</value>
+      <footprint>Mounting_Holes:MountingHole_3.2mm_M3_Pad_Via</footprint>
+      <libsource lib="conn" part="CONN_01X01" description="Connector, single row, 01x01"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5DA03A04</tstamp>
+    </comp>
+    <comp ref="P3">
+      <value>CONN_01X01</value>
+      <footprint>Mounting_Holes:MountingHole_3.2mm_M3_Pad_Via</footprint>
+      <libsource lib="conn" part="CONN_01X01" description="Connector, single row, 01x01"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5DA3723D</tstamp>
+    </comp>
+    <comp ref="J2">
+      <value>SMA-15</value>
+      <footprint>ok1hra:SMA-90</footprint>
+      <datasheet>https://www.tme.eu/cz/details/sma-15/konektory-sma-smb-smc/</datasheet>
+      <fields>
+        <field name="req">SMA/90°/female/gold-plated</field>
+      </fields>
+      <libsource lib="ok1hra" part="CINCH" description=""/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5D966454</tstamp>
+    </comp>
+  </components>
+  <libparts>
+    <libpart lib="atmel" part="ATTINY13-SS">
+      <aliases>
+        <alias>ATTINY13A-SS</alias>
+      </aliases>
+      <description>SO8, 1k Flash, 64B SRAM, 64B EEPROM, Debug Wire</description>
+      <docs>http://www.atmel.com/Images/doc2535.pdf</docs>
+      <fields>
+        <field name="Reference">IC</field>
+        <field name="Value">ATTINY13-SS</field>
+        <field name="Footprint">SO8</field>
+      </fields>
+      <pins>
+        <pin num="1" name="PB5(~RESET~/ADC0/PCINT5/dW)" type="BiDi"/>
+        <pin num="2" name="PB3(CLKI/ADC3/PCINT3)" type="BiDi"/>
+        <pin num="3" name="PB4(ADC2/PCINT4)" type="BiDi"/>
+        <pin num="4" name="GND" type="power_in"/>
+        <pin num="5" name="PB0(MOSI/AIN0/OC0A/PCINT0)" type="BiDi"/>
+        <pin num="6" name="PB1(MISO/AIN1/OC0B/INT0/PCINT1)" type="BiDi"/>
+        <pin num="7" name="PB2(SCK/ADC1/T0/PCINT2)" type="BiDi"/>
+        <pin num="8" name="VCC" type="power_in"/>
+      </pins>
+    </libpart>
+    <libpart lib="conn" part="CONN_01X01">
+      <description>Connector, single row, 01x01</description>
+      <footprints>
+        <fp>Pin_Header_Straight_1X01</fp>
+        <fp>Pin_Header_Angled_1X01</fp>
+        <fp>Socket_Strip_Straight_1X01</fp>
+        <fp>Socket_Strip_Angled_1X01</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">P</field>
+        <field name="Value">CONN_01X01</field>
+      </fields>
+      <pins>
+        <pin num="1" name="P1" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="conn" part="CONN_02X04">
+      <description>Connector, double row, 02x04</description>
+      <footprints>
+        <fp>Pin_Header_Straight_2X04</fp>
+        <fp>Pin_Header_Angled_2X04</fp>
+        <fp>Socket_Strip_Straight_2X04</fp>
+        <fp>Socket_Strip_Angled_2X04</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">P</field>
+        <field name="Value">CONN_02X04</field>
+      </fields>
+      <pins>
+        <pin num="1" name="P1" type="passive"/>
+        <pin num="2" name="P2" type="passive"/>
+        <pin num="3" name="P3" type="passive"/>
+        <pin num="4" name="P4" type="passive"/>
+        <pin num="5" name="P5" type="passive"/>
+        <pin num="6" name="P6" type="passive"/>
+        <pin num="7" name="P7" type="passive"/>
+        <pin num="8" name="P8" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="device" part="CP_Small">
+      <description>Polarised capacitor</description>
+      <footprints>
+        <fp>CP*</fp>
+        <fp>C_Axial*</fp>
+        <fp>C_Radial*</fp>
+        <fp>TantalC*</fp>
+        <fp>C*elec</fp>
+        <fp>c_elec*</fp>
+        <fp>SMD*_Pol</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">C</field>
+        <field name="Value">CP_Small</field>
+      </fields>
+      <pins>
+        <pin num="1" name="~" type="passive"/>
+        <pin num="2" name="~" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="device" part="C_Small">
+      <description>Unpolarized capacitor</description>
+      <footprints>
+        <fp>C?</fp>
+        <fp>C_????_*</fp>
+        <fp>C_????</fp>
+        <fp>SMD*_c</fp>
+        <fp>Capacitor*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">C</field>
+        <field name="Value">C_Small</field>
+      </fields>
+      <pins>
+        <pin num="1" name="~" type="passive"/>
+        <pin num="2" name="~" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="device" part="C_Variable">
+      <description>Variable capacitor</description>
+      <fields>
+        <field name="Reference">C</field>
+        <field name="Value">C_Variable</field>
+      </fields>
+      <pins>
+        <pin num="1" name="~" type="passive"/>
+        <pin num="2" name="~" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="device" part="D_Schottky_Small_ALT">
+      <description>Schottky diode, small symbol, alternativ symbol</description>
+      <footprints>
+        <fp>Diode_*</fp>
+        <fp>D-*</fp>
+        <fp>*SingleDiode</fp>
+        <fp>*_Diode_*</fp>
+        <fp>*SingleDiode*</fp>
+        <fp>D_*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">D</field>
+        <field name="Value">D_Schottky_Small_ALT</field>
+      </fields>
+      <pins>
+        <pin num="1" name="K" type="passive"/>
+        <pin num="2" name="A" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="device" part="Jumper_NC_Dual">
+      <description>Dual Jumper, normally closed</description>
+      <fields>
+        <field name="Reference">JP</field>
+        <field name="Value">Jumper_NC_Dual</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+        <pin num="3" name="3" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="device" part="R">
+      <description>Resistor</description>
+      <footprints>
+        <fp>R_*</fp>
+        <fp>Resistor_*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">R</field>
+        <field name="Value">R</field>
+      </fields>
+      <pins>
+        <pin num="1" name="~" type="passive"/>
+        <pin num="2" name="~" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="iak-swr-meter-rescue" part="LED_Small-Device-modular-bed-controller-01-rescue-modular-bed-controller-02-rescue-modular-bed-controller-LED-02-rescue-modular-bed-controller-LED-03.0-rescue">
+      <footprints>
+        <fp>LED*</fp>
+        <fp>LED_SMD:*</fp>
+        <fp>LED_THT:*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">D</field>
+        <field name="Value">LED_Small-Device-modular-bed-controller-01-rescue-modular-bed-controller-02-rescue-modular-bed-controller-LED-02-rescue-modular-bed-controller-LED-03.0-rescue</field>
+      </fields>
+      <pins>
+        <pin num="1" name="K" type="passive"/>
+        <pin num="2" name="A" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="ok1hra" part="CINCH">
+      <fields>
+        <field name="Reference">J</field>
+        <field name="Value">CINCH</field>
+      </fields>
+      <pins>
+        <pin num="1" name="~" type="passive"/>
+        <pin num="2" name="~" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="ok1hra" part="Common-mode-choke">
+      <fields>
+        <field name="Reference">L</field>
+        <field name="Value">Common-mode-choke</field>
+      </fields>
+      <pins>
+        <pin num="1" name="~" type="input"/>
+        <pin num="2" name="~" type="input"/>
+        <pin num="3" name="~" type="input"/>
+        <pin num="4" name="~" type="input"/>
+      </pins>
+    </libpart>
+    <libpart lib="ok1hra" part="Toroid-4in">
+      <fields>
+        <field name="Reference">T</field>
+        <field name="Value">Toroid-4in</field>
+      </fields>
+      <pins>
+        <pin num="1" name="~" type="input"/>
+        <pin num="2" name="~" type="input"/>
+        <pin num="3" name="~" type="input"/>
+        <pin num="4" name="~" type="input"/>
+        <pin num="5" name="~" type="input"/>
+        <pin num="6" name="~" type="input"/>
+      </pins>
+    </libpart>
+    <libpart lib="regul" part="LM317K">
+      <aliases>
+        <alias>LM117K</alias>
+      </aliases>
+      <description>1.5A 35V Adjustable Linear Regulator, TO-3</description>
+      <docs>http://www.national.com/ds/LM/LM117.pdf</docs>
+      <footprints>
+        <fp>TO*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">LM317K</field>
+        <field name="Footprint">TO-3</field>
+      </fields>
+      <pins>
+        <pin num="1" name="ADJ" type="input"/>
+        <pin num="2" name="IN" type="input"/>
+        <pin num="3" name="OUT" type="power_out"/>
+      </pins>
+    </libpart>
+  </libparts>
+  <libraries>
+    <library logical="atmel">
+      <uri>/usr/share/kicad/library/atmel.lib</uri>
+    </library>
+    <library logical="conn">
+      <uri>/usr/share/kicad/library/conn.lib</uri>
+    </library>
+    <library logical="device">
+      <uri>/usr/share/kicad/library/device.lib</uri>
+    </library>
+    <library logical="iak-swr-meter-rescue">
+      <uri>/home/dan/kicad/hra/iak-swr-meter/02/iak-swr-meter-rescue.lib</uri>
+    </library>
+    <library logical="ok1hra">
+      <uri>/home/dan/kicad/hra/lib/ok1hra.lib</uri>
+    </library>
+    <library logical="regul">
+      <uri>/usr/share/kicad/library/regul.lib</uri>
+    </library>
+  </libraries>
+  <nets>
+    <net code="1" name="Net-(C4-Pad1)">
+      <node ref="D7" pin="1"/>
+      <node ref="R5" pin="1"/>
+      <node ref="C4" pin="1"/>
+    </net>
+    <net code="2" name="GND">
+      <node ref="C1" pin="1"/>
+      <node ref="U1" pin="1"/>
+      <node ref="R6" pin="2"/>
+      <node ref="C7" pin="1"/>
+      <node ref="C9" pin="2"/>
+      <node ref="R12" pin="2"/>
+      <node ref="IC1" pin="4"/>
+      <node ref="C8" pin="1"/>
+      <node ref="L1" pin="4"/>
+      <node ref="C5" pin="1"/>
+      <node ref="C2" pin="1"/>
+    </net>
+    <net code="3" name="Net-(C2-Pad2)">
+      <node ref="C2" pin="2"/>
+      <node ref="U1" pin="2"/>
+      <node ref="R4" pin="1"/>
+    </net>
+    <net code="4" name="Net-(C3-Pad2)">
+      <node ref="C3" pin="2"/>
+      <node ref="D9" pin="1"/>
+      <node ref="L1" pin="2"/>
+      <node ref="D8" pin="1"/>
+    </net>
+    <net code="5" name="+3V">
+      <node ref="IC1" pin="8"/>
+      <node ref="C9" pin="1"/>
+      <node ref="R8" pin="2"/>
+      <node ref="C1" pin="2"/>
+      <node ref="U1" pin="3"/>
+      <node ref="C8" pin="2"/>
+    </net>
+    <net code="6" name="Net-(P1-Pad2)">
+      <node ref="T1" pin="6"/>
+      <node ref="P1" pin="2"/>
+    </net>
+    <net code="7" name="Net-(P1-Pad4)">
+      <node ref="T1" pin="5"/>
+      <node ref="P1" pin="4"/>
+    </net>
+    <net code="8" name="Net-(P1-Pad6)">
+      <node ref="T1" pin="4"/>
+      <node ref="P1" pin="6"/>
+    </net>
+    <net code="9" name="Net-(P1-Pad8)">
+      <node ref="P1" pin="8"/>
+      <node ref="T1" pin="3"/>
+    </net>
+    <net code="10" name="Net-(J2-Pad1)">
+      <node ref="J2" pin="1"/>
+      <node ref="JP2" pin="2"/>
+      <node ref="P1" pin="1"/>
+      <node ref="P1" pin="5"/>
+      <node ref="P1" pin="7"/>
+      <node ref="P1" pin="3"/>
+    </net>
+    <net code="11" name="Net-(C10-Pad2)">
+      <node ref="J1" pin="2"/>
+      <node ref="D9" pin="2"/>
+      <node ref="R13" pin="2"/>
+      <node ref="R7" pin="2"/>
+      <node ref="D7" pin="2"/>
+      <node ref="P3" pin="1"/>
+      <node ref="J2" pin="2"/>
+      <node ref="C10" pin="2"/>
+      <node ref="T1" pin="1"/>
+    </net>
+    <net code="12" name="Net-(C10-Pad1)">
+      <node ref="T1" pin="2"/>
+      <node ref="P2" pin="1"/>
+      <node ref="C10" pin="1"/>
+    </net>
+    <net code="13" name="Net-(L1-Pad1)">
+      <node ref="R4" pin="2"/>
+      <node ref="L1" pin="1"/>
+    </net>
+    <net code="14" name="Net-(J1-Pad1)">
+      <node ref="J1" pin="1"/>
+      <node ref="JP1" pin="2"/>
+    </net>
+    <net code="15" name="FW">
+      <node ref="C5" pin="2"/>
+      <node ref="R6" pin="1"/>
+      <node ref="IC1" pin="2"/>
+      <node ref="R5" pin="2"/>
+    </net>
+    <net code="16" name="Net-(JP1-Pad1)">
+      <node ref="JP1" pin="1"/>
+      <node ref="JP2" pin="1"/>
+    </net>
+    <net code="17" name="Net-(D1-Pad1)">
+      <node ref="D1" pin="1"/>
+      <node ref="R1" pin="2"/>
+      <node ref="D2" pin="2"/>
+    </net>
+    <net code="18" name="Net-(IC1-Pad1)">
+      <node ref="R8" pin="1"/>
+      <node ref="IC1" pin="1"/>
+    </net>
+    <net code="19" name="Net-(D1-Pad2)">
+      <node ref="D2" pin="1"/>
+      <node ref="R3" pin="1"/>
+      <node ref="D1" pin="2"/>
+      <node ref="IC1" pin="5"/>
+    </net>
+    <net code="20" name="Net-(D10-Pad2)">
+      <node ref="D10" pin="2"/>
+      <node ref="JP2" pin="3"/>
+      <node ref="R14" pin="2"/>
+      <node ref="R15" pin="2"/>
+    </net>
+    <net code="21" name="Net-(C6-Pad1)">
+      <node ref="R11" pin="1"/>
+      <node ref="D10" pin="1"/>
+      <node ref="C6" pin="1"/>
+    </net>
+    <net code="22" name="Net-(D3-Pad2)">
+      <node ref="IC1" pin="3"/>
+      <node ref="D3" pin="2"/>
+      <node ref="D4" pin="1"/>
+      <node ref="R1" pin="1"/>
+    </net>
+    <net code="23" name="REF">
+      <node ref="IC1" pin="7"/>
+      <node ref="C7" pin="2"/>
+      <node ref="R12" pin="1"/>
+      <node ref="R11" pin="2"/>
+    </net>
+    <net code="24" name="Net-(D8-Pad2)">
+      <node ref="R15" pin="1"/>
+      <node ref="R9" pin="1"/>
+      <node ref="R14" pin="1"/>
+      <node ref="JP1" pin="3"/>
+      <node ref="R10" pin="1"/>
+      <node ref="D8" pin="2"/>
+    </net>
+    <net code="25" name="Net-(D3-Pad1)">
+      <node ref="D3" pin="1"/>
+      <node ref="D4" pin="2"/>
+      <node ref="R2" pin="2"/>
+    </net>
+    <net code="26" name="Net-(D5-Pad2)">
+      <node ref="IC1" pin="6"/>
+      <node ref="D6" pin="1"/>
+      <node ref="D5" pin="2"/>
+      <node ref="R2" pin="1"/>
+    </net>
+    <net code="27" name="Net-(D5-Pad1)">
+      <node ref="D6" pin="2"/>
+      <node ref="D5" pin="1"/>
+      <node ref="R3" pin="2"/>
+    </net>
+    <net code="28" name="Net-(C3-Pad1)">
+      <node ref="C3" pin="1"/>
+      <node ref="R9" pin="2"/>
+      <node ref="C4" pin="2"/>
+      <node ref="C6" pin="2"/>
+      <node ref="R7" pin="1"/>
+      <node ref="R13" pin="1"/>
+      <node ref="R10" pin="2"/>
+      <node ref="L1" pin="3"/>
+    </net>
+  </nets>
+</export>

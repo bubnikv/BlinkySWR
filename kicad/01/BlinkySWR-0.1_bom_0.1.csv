@@ -1,0 +1,35 @@
+Component,Description,Part,References,Value,Footprint,Quantity Per PCB,Datasheet,req,note
+1,Polarised capacitor,CP_Small,C9,1000u,CP_Radial_D10.0mm_P5.00mm,1,https://www.tme.eu/cz/details/pf0j102mnn1012/elektrolyticke-kondenzatory-tht-105degc/elite/,"6,3VDC/Ø10x12,5mm/±20%",
+2,Unpolarized capacitor,C_Small,C8,100n,C_0805,1,https://www.tme.eu/cz/details/cl21b102kcannnc/kondenzatory-mlcc-smd-0805/samsung/,100V/X7R/10%,
+3,Unpolarized capacitor,C_Small,C1 C2 C3 C4 C5 C6 C7,1n,C_0805,7,https://www.tme.eu/cz/details/cl21b102kcannnc/kondenzatory-mlcc-smd-0805/samsung/,100V/X7R/10%,
+4,Variable capacitor,C_Variable,C10,C_Variable,C_Axial_L5.1mm_D3.1mm_P10.00mm_Horizontal,1,,,
+5,"Schottky diode, small symbol, alternativ symbol",D_Schottky_Small_ALT,D7 D8 D9 D10,1N5711,SOD-123,4,https://www.tme.eu/cz/details/1n5711w-7-f/diody-schottky-smd/diodes-incorporated/,70V/15mA/1ns/333mW/2pF,
+6,,LED_Small-Device-modular-bed-controller-01-rescue-modular-bed-controller-02-rescue-modular-bed-controller-LED-02-rescue-modular-bed-controller-LED-03.0-rescue,D1 D2 D3 D4 D5 D6,OF-SMD2012HR,D_0805,6,https://www.tme.eu/cz/details/of-smd2012hr/diody-led-smd-barevne/optoflash/,"460÷700mcd/RED/120°/1,8÷2,4V",
+7,"SO8, 1k Flash, 64B SRAM, 64B EEPROM, Debug Wire",ATTINY13A-SS,IC1,ATTINY13A-SSH,SOIC-8_3.9x4.9mm_Pitch1.27mm,1,https://www.tme.eu/cz/details/attiny13a-ssh/rodina-avr-8-bitu/microchip-atmel/,64B/1kB,
+8,,CINCH,J1 J2,SMA-15,SMA-90,2,https://www.tme.eu/cz/details/sma-15/konektory-sma-smb-smc/,SMA/90°/female/gold-plated,
+9,"Dual Jumper, normally closed",Jumper_NC_Dual,JP1 JP2,BYPASS,Pin_Header_Straight_1x03,2,,,
+10,,Common-mode-choke,L1,FT37-43,FT37-43-common-mode,1,https://www.rf-microwave.com/en/nbp/nmp/toroid-for-broadband-emi-filters/ft-37-43/,2x8 turns,http://www.toroids.info/FT37-43.php
+11,"Connector, double row, 02x04",CONN_02X04,P1,CONN_02X04,Pin_Header_Straight_2x04,1,,,
+12,Resistor,R,R7 R9 R10 R13 R14 R15,100R,R_1206,6,https://www.tme.eu/cz/details/hp06-100r1%25/rezistory-smd-1206/royal-ohm/hp06w2f1000t5e/,"0,5W/1%",
+13,Resistor,R,R8,10k,R_0805,1,,"0,125W/1%",
+14,Resistor,R,R4,1k,R_0805,1,,"0,125W/1%",
+15,Resistor,R,R6 R12,2k2,R_0805,2,,"0,125W/1%",
+16,Resistor,R,R5 R11,39k,R_0805,2,,"0,125W/1%",
+17,Resistor,R,R1 R2 R3,500R,R_0805,3,,"0,125W/1%",
+18,,Toroid-4in,T1,T50-6,T50-6-4,1,,,http://www.toroids.info/T50-6.php
+19,"1.5A 35V Adjustable Linear Regulator, TO-3",LM117K,U1,HT7130-1,SOT-23-5,1,https://www.gme.cz/ht7130-1-sot23-5-holtek,4-24V/3V/100mVdrop/30mA,
+
+
+
+
+
+Component Groups:,19
+Component Count:,44
+Fitted Components:,44
+Number of PCBs:,1
+Total components:,44
+Schematic Version:,0.1
+Schematic Date:,2019-10-02
+BoM Date:,"St2.jna2019,20:39:22CEST"
+Schematic Source:,/home/dan/kicad/hra/iak-swr-meter/02/iak-swr-meter.sch
+KiCad Version:,Eeschema 5.1.4+dfsg1-1~bpo10+1
