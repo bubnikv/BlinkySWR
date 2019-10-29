@@ -59,29 +59,39 @@ corr_step_x2 = corr_step_x / 16;
 # Samples of the correction table, to be fitted with a linear interpolation curve.
 corr_samples = [0:corr_step_x2:corr_step_x-corr_step_x2, corr_step_x:corr_step_x:adc_vmax];
 
-# Fit the polyline to the rough table with a fine table knee over the ADC interval <0, 1.1).
-vadc_mean_trimmed = [vadc_mean(1:find(vadc_mean >= 1.1)(1)-1); 1.1];
-vadc_corr_trimmed = [vadc_corr(1:find(vadc_mean >= 1.1)(1)-1); interp1(vadc_mean, vadc_corr, 1.1)];
+# Fit the polyline to the rough table with a fine table knee over the ADC interval <0, adc_vmax).
+vadc_mean_trimmed = [vadc_mean(1:find(vadc_mean >= adc_vmax)(1)-1); adc_vmax];
+vadc_corr_trimmed = [vadc_corr(1:find(vadc_mean >= adc_vmax)(1)-1); interp1(vadc_mean, vadc_corr, adc_vmax)];
 vadc_corr_poly1 = splinefit(vadc_mean_trimmed, vadc_corr_trimmed, corr_samples, "order", 1);
 corr_firmware_knee = vadc_corr_poly1.coefs(1:table_size2,2);
 corr_firmware_rough = [ vadc_corr_poly1.coefs(table_size2+1:end,2); vadc_corr_poly1.coefs(end, 2) + vadc_corr_poly1.coefs(end, 1) * corr_step_x ];
 
 # Visualize interpolation errors.
 err_samples = 0:adc_vmax/1024:adc_vmax;
-interp_error = interp1(vadc_mean, vadc_corr, err_samples) - ppval(vadc_corr_poly1, err_samples);
-plot(corr_samples(1:end-1), vadc_corr_poly1.coefs(:,2), 'g+', vadc_mean, vadc_corr, 'b', err_samples, interp_error, 'r');
+interp_error = interp1(vadc_mean, vadc_corr, err_samples) - interp1(corr_samples, [corr_firmware_knee; corr_firmware_rough], err_samples);
+plot(corr_samples, [corr_firmware_knee; corr_firmware_rough], 'g+', vadc_mean, vadc_corr, 'b', err_samples, interp_error, 'r');
 
-# Scaling to 13 + 4 = 17 bits of resolution.
-# This is 4 bits more than the 8 summed samples of the ADC data.
-bits = 8 * 1024 * 16;
-corr_firmware_rough_scaled = round((bits / 1.1) * corr_firmware_rough);
+# Scale the measured value, so that 10V will be a multiple of 2^N.
+# Maximum power measured at full ADC input scale including the correction.
+vpp_max = 2 * (adc_vmax+corr_firmware_rough(end))*(150+10)/10;
+pwr_max = vpp_max^2 / 100;
+# Scale voltage, so that the maximum corrected input will correspond to 16 watts transceiver power.
+adc_scale = sqrt(pwr_max / 16);
+# When the corrected ADC voltage is scaled with adc_scale, the maximum ADC value corresponds to 16 Watts
+# and 1/4 of the ADC value corresponds conveniently to 1 Watt.
+vpp_test_16 = 2 * ((adc_vmax+corr_firmware_rough(end)) / adc_scale)*(150+10)/10;
+pwr_test_16 = vpp_test_16^2 / 100;
+
+# Scaling to 13 + 2 = 15 bits of resolution, where 32768 corresponds to 16 Watts of input power.
+scale = adc_scale * 8 * 1024 * 4 / adc_vmax;
+corr_firmware_rough_scaled = round(scale * (corr_samples(table_size2+1:end) .+ corr_firmware_rough'));
 
 % Writing corr_firmware_rough_scaled into Intel HEX file to be stored into EEPROM of the AtTiny13A. 
-fname = "eeprom.hex";
+fname = "../../firmware/eeprom.hex";
 delete(fname);
 fileID = fopen(fname, 'w');
 for (line_idx = 0:3)
-	words = corr_firmware_rough_scaled(line_idx * 8 + 1 : (line_idx + 1) * 8)';
+	words = corr_firmware_rough_scaled(line_idx * 8 + 1 : (line_idx + 1) * 8);
 	line = [ 16, 0, line_idx * 16, 0, [ mod(words, 256); floor(words / 256); ](:)' ];
 	checksum = mod(256 - mod(sum(line), 256), 256);
 	line = [ line, checksum ];
@@ -91,10 +101,10 @@ fprintf(fileID, ":00000001FF\n");
 fclose(fileID);
 
 % Writing corr_firmware_fine_scaled into a C file to be included into the firmware source.
-corr_firmware_knee_scaled = round((bits / 1.1) * corr_firmware_knee);
-corr_firmware_knee_scaled_hexcstr = strcat("0x", dec2hex(corr_firmware_knee_scaled, 4), ", ")'(:)'(1:end-1)
-fname = "table_fine.inc";
+corr_firmware_knee_scaled = round(scale * (corr_samples(1:table_size2) .+ corr_firmware_knee'));
+corr_firmware_knee_scaled_hexcstr = strcat("0x", dec2hex(corr_firmware_knee_scaled, 4), ", ")'(:)'(1:end-1);
+fname = "../../firmware/table_fine.inc";
 delete(fname);
 fileID = fopen(fname, 'w');
-fprintf(fileID, "%s\n", corr_firmware_fine_scaled_hexcstr);
+fprintf(fileID, "%s\n", corr_firmware_knee_scaled_hexcstr);
 fclose(fileID);
