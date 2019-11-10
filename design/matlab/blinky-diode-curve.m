@@ -4,6 +4,7 @@ simresult = LTspice2Matlab('..\ltspice\blinky-diode-curve-parametric.raw');
 
 # Indices of starts of each of the time sequence produced by ltspice.
 starts = find(simresult.time_vect == simresult.time_vect(1));
+assert(size(starts)(2) == 1001, "Number of samples must match size(0:0.1:100)");
 # Process the ltspice simulation data, 
 steps     = size(starts)(2);
 vsrc_max  = zeros(steps, 1);
@@ -45,7 +46,8 @@ plot((vload - vload_max) ./ vload)
 plot(vload - vload_max)
 
 # Correction of the diode drop with a 150kOhm / 10kOhm resistive divider.
-vadc_corr = vload * 10 / (150+10) - vadc_mean;
+resistor_divider_ratio = 10 / (150 + 10);
+vadc_corr = vload * resistor_divider_ratio - vadc_mean;
 plot(vadc_mean, vadc_corr)
 
 # ADC reference.
@@ -72,18 +74,20 @@ interp_error = interp1(vadc_mean, vadc_corr, err_samples) - interp1(corr_samples
 plot(corr_samples, [corr_firmware_knee; corr_firmware_rough], 'g+', vadc_mean, vadc_corr, 'b', err_samples, interp_error, 'r');
 
 # Scale the measured value, so that 10V will be a multiple of 2^N.
+adc_vmax_corrected = adc_vmax+corr_firmware_rough(end);
 # Maximum power measured at full ADC input scale including the correction.
-vpp_max = 2 * (adc_vmax+corr_firmware_rough(end))*(150+10)/10;
+vpp_max = 2 * adc_vmax_corrected / resistor_divider_ratio;
 pwr_max = vpp_max^2 / 100;
 # Scale voltage, so that the maximum corrected input will correspond to 16 watts transceiver power.
 adc_scale = sqrt(pwr_max / 16);
 # When the corrected ADC voltage is scaled with adc_scale, the maximum ADC value corresponds to 16 Watts
 # and 1/4 of the ADC value corresponds conveniently to 1 Watt.
-vpp_test_16 = 2 * ((adc_vmax+corr_firmware_rough(end)) / adc_scale)*(150+10)/10;
+vpp_test_16 = (2 * adc_vmax_corrected / adc_scale) / resistor_divider_ratio;
 pwr_test_16 = vpp_test_16^2 / 100;
+assert(abs(pwr_test_16 - 16) < 1e-4);
 
 # Scaling to 13 + 2 = 15 bits of resolution, where 32768 corresponds to 16 Watts of input power.
-scale = adc_scale * 8 * 1024 * 4 / adc_vmax;
+scale = adc_scale * 8 * 1024 * 4 / adc_vmax_corrected;
 corr_firmware_rough_scaled = round(scale * (corr_samples(table_size2+1:end) .+ corr_firmware_rough'));
 
 % Writing corr_firmware_rough_scaled into Intel HEX file to be stored into EEPROM of the AtTiny13A. 
@@ -94,8 +98,7 @@ for (line_idx = 0:3)
 	words = corr_firmware_rough_scaled(line_idx * 8 + 1 : (line_idx + 1) * 8);
 	line = [ 16, 0, line_idx * 16, 0, [ mod(words, 256); floor(words / 256); ](:)' ];
 	checksum = mod(256 - mod(sum(line), 256), 256);
-	line = [ line, checksum ];
-	fprintf(fileID, ":%s\n", strcat(dec2hex(line,2)'(:)'));
+	fprintf(fileID, ":%s\n", strcat(dec2hex([ line, checksum ],2)'(:)'));
 end
 fprintf(fileID, ":00000001FF\n");
 fclose(fileID);
