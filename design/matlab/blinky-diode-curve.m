@@ -111,3 +111,14 @@ delete(fname);
 fileID = fopen(fname, 'w');
 fprintf(fileID, "%s\n", corr_firmware_knee_scaled_hexcstr);
 fclose(fileID);
+
+% Verifying the diode curve interpolation against the data captured by a logic analyzer from the firmware
+% from_firmware(:,1) - sequence from 0 to (1023 * 8): Possible sum of 8 ADC samples.
+% from_firmware(:,2) - interpolation by the firmware's correct_diode(uint16_t v) function.
+load from_firmware.mat
+fw_adc = from_firmware(:,1) * adc_vmax / (1024 * 8);
+fw_corrected = from_firmware(:,2);
+poly_corrected = scale * (fw_adc + ppval(vadc_corr_poly1, fw_adc));
+fw_error = fw_corrected - poly_corrected;
+% Interpolation error is lower than 2 LSB of a 15 bit value, reaching resolution of 13 bits.
+assert(max(abs(fw_error)) < 3);

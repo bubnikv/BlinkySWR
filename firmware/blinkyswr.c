@@ -41,7 +41,7 @@
 #include <avr/sleep.h>
 #include <avr/wdt.h>
 
-const uint16_t diode_correction_table_rough[] PROGMEM = {
+const uint16_t diode_correction_table_rough[16] PROGMEM = {
 	#include "table_fine.inc"
 };
 
@@ -90,12 +90,44 @@ struct LedState {
 
 static struct LedState led_state;
 
+// #define DEBUG_SPI
+
+#ifdef DEBUG_SPI
+#define SPI_MOSI	LINE_A
+#define SPI_CLK 	LINE_B
+#define SPI_EN		LINE_C
+
+// Output one byte by software SPI, for debugging purposes.
+// http://nerdralph.blogspot.com/2015/03/fastest-avr-software-spi-in-west.html
+void spi_byte(uint8_t byte)
+{
+    uint8_t i = 8;
+//    uint8_t portbits = PORTB & ~((1 << SPI_MOSI) | (1 << SPI_CLK));
+    do {
+		// CLK and MOSI are low in portbits.
+//		PORTB = portbits;
+		// All other pins are inputs, just set all outputs to zero.
+		PORTB = 0;
+        if (byte & 0x80)
+			PINB = (1 << SPI_MOSI);
+		// Toggle CLK - unusual optimization, see ATTiny13 datasheet, page 48:
+		// "writing a logic one to a bit in the PINx Register, will result in a toggle 
+		// in the corresponding bit in the Data Register"
+        PINB = (1 << SPI_CLK);
+        byte <<= 1;
+    } while (-- i);
+}
+#endif /* DEBUG_SPI */
+
 // Switch the charlieplexed LEDs to the 2nd state of the period.
 // The CPU will also wake up from the sleep state.
 ISR(TIM0_COMPA_vect)
 {
+#ifdef DEBUG_SPI
+#else
 	DDRB  = led_state.dir2use;
 	PORTB = led_state.out2use;
+#endif /* DEBUG_SPI */
 }
 
 // Timer overflow is used to wake up CPU from sleep mode.
@@ -197,6 +229,7 @@ uint16_t correct_diode(uint16_t v)
 {
 	uint16_t corr1, corr2;
 	if (v < 256) {
+		// Interpolating a knee of the diode curve, table is 16 items long.
 		uint16_t addr;
 		addr = (uint16_t)diode_correction_table_rough + ((v & 0x0f0) >> 3);
 		corr1 = __LPM(addr ++);
@@ -217,7 +250,7 @@ uint16_t correct_diode(uint16_t v)
 		// Now use the lowest 8 bits of the measurement value to interpolate linearly.
 		return corr1 + ((((v & 0x0f) * (corr2 - corr1)) + 0x7) >> 4);
 	} else {
-		// Read the two successive entries of the diode correction table from EEPROM.
+		// Read two successive entries of the diode correction table from EEPROM, table is 32 items long.
 		// Address of the correction value in the EEPROM.
 		EEARL = (unsigned char)(((v >> (13 - 5 - 1)) & 0x0fe) - 2);
 		// Start eeprom read by writing EERE
@@ -226,15 +259,41 @@ uint16_t correct_diode(uint16_t v)
 		++ EEARL;
 		EECR |= 1<<EERE;
 		corr1 |= EEDR << 8;
+		++ EEARL;
 		EECR |= 1<<EERE;
 		corr2 = EEDR;
 		++ EEARL;
 		EECR |= 1<<EERE;
 		corr2 |= EEDR << 8;
 		// Now use the lowest 8 bits of the measurement value to interpolate linearly.
-		return corr1 + (((v & 0x0ff) * (((corr2 - corr1) + 0x07) >> 2) + 0x1f) >> 6);
+		// max(corr2-corr1) = 982, which is tad smaller than 1024, therefore
+		// the difference is first divided by 4 and rounded before multiplication 
+		return corr1 + (((v & 0x0ff) * (((corr2 - corr1) + 0x01) >> 2) + 0x1f) >> 6);
 	}
 }
+
+#ifdef DEBUG_SPI
+// Testing the correct_diode() interpolation:
+// Send a sequence of i = <0, 1023*8> and correct_diode(i) to SPI bus
+// to be captured by a logic analyzer and compared with the Octave tables.
+void correct_diode_test()
+{
+	for (;;) {
+		for (uint16_t i = 0; i <= 1023 * 8; ++ i) {
+			uint16_t j = correct_diode(i);
+			spi_byte(i >> 8);
+			spi_byte(i & 0x0ff);
+			spi_byte(j >> 8);
+			spi_byte(j & 0x0ff);
+			PORTB = (1 << SPI_EN);
+		}
+		for (uint16_t i = 0; i <= 1023 * 8; ++ i) {
+			PORTB = 0;
+			PORTB = (1 << SPI_EN);
+		}
+	}
+}
+#endif /* DEBUG_SPI */
 
 int main(void)
 {
@@ -251,8 +310,17 @@ int main(void)
 	
 	// Set all LED pins to outputs, set all LED values to zeros. This switches all charlieplexed LEDs off
 	// with a defined state.
+#ifdef DEBUG_SPI
+	// Enable SPI outputs.
+	DDRB = (1 << SPI_MOSI) | (1 << SPI_CLK) | (1 << SPI_EN);
+	// Disable SPI
+	PORTB = (1 << SPI_EN);
+#else
+	// Enable LED outputs.
 	DDRB = ALL_LEDS;
+	// Switch off all LEDs.
 	PORTB = 0;
+#endif
 	// Disable all digital input buffers for lower current consumption, as we are using two analog inputs
 	// and three tri-stated output pins.
 	DIDR0 = 0x3f;
@@ -266,6 +334,10 @@ int main(void)
 
 	// Power Savings
 //	set_bit(MCUCR, PUD);		// Disable pullups
+
+#ifdef DEBUG_SPI
+	correct_diode_test();
+#endif /* DEBUG_SPI */
 
 	sei();
 
@@ -327,6 +399,13 @@ int main(void)
 		vfwd = correct_diode(vfwd);
 		vref = correct_diode(vref);
 		show_swr(vfwd, vref);
+#ifdef DEBUG_SPI
+		spi_byte(vfwd >> 8);
+		spi_byte(vfwd & 0x0ff);
+		spi_byte(vref >> 8);
+		spi_byte(vref & 0x0ff);
+		PORTB = (1 << SPI_EN);
+#endif /* DEBUG_SPI */
 		vfwd0 = vfwd1;
 		vfwd1 = vfwd2;
 		vfwd2 = vfwd;
@@ -367,8 +446,11 @@ wait_end:
 			sleep_mode();
 		} while (TCCR0B);
 		// Set the LED for the next long interval.
+#ifdef DEBUG_SPI
+#else
 		DDRB  = led_state.dir1;
 		PORTB = led_state.out1;
+#endif
 		led_state.dir2use = led_state.dir2;
 		led_state.out2use = led_state.out2;
 		// Next timer run will interrupt on overflow and on compare A if the timer_capture value is not close to full period.
