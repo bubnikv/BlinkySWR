@@ -41,6 +41,9 @@
 #include <avr/sleep.h>
 #include <avr/wdt.h>
 
+#define F_CPU 1000000UL  // 1 MHz
+#include <util/delay.h>
+
 const uint16_t diode_correction_table_rough[16] PROGMEM = {
 	#include "table_fine.inc"
 };
@@ -88,10 +91,10 @@ struct LedState {
 	unsigned char timer_capture;
 };
 
-static struct LedState led_state;
+static struct LedState led_state __attribute__ ((section (".noinit")));
 
 // #define DEBUG_SPI
-
+// sigrok-cli -d fx2lafw -c samplerate=500k --continuous -P spi:mosi=D5:clk=D7:cs=D6 --protocol-decoder-annotations spi=mosi-data
 #ifdef DEBUG_SPI
 #define SPI_MOSI	LINE_A
 #define SPI_CLK 	LINE_B
@@ -156,6 +159,9 @@ void interpolate_baragraph(unsigned char led_idx, unsigned char led_value)
 	led_state.dir2 = __LPM(addr ++);
 	led_state.out2 = __LPM(addr);
 	if (led_value < 128) {
+		// Invert the timer value.
+		led_value = 255 - led_value;
+	} else {
 		// Swap led1_dir/out with led2_dir/out, so that the 1st part of the 75 Hz period will be longer
 		// than the second one
 		unsigned char tmp = led_state.dir1;
@@ -164,17 +170,8 @@ void interpolate_baragraph(unsigned char led_idx, unsigned char led_value)
 		tmp = led_state.out1;
 		led_state.out1 = led_state.out2;
 		led_state.out2 = tmp;
-		// and invert the timer value.
-		led_value = 255 - led_value;
 	}
 	led_state.timer_capture = led_value;
-}
-
-// The expected input value is from 0 to 6 * 256 = 1536.
-// Value above 6 * 256 is clamped to 6 * 256.
-inline __attribute__((always_inline)) void set_baragraph_value(unsigned long value)
-{
-	interpolate_baragraph((unsigned char)(value >> 8), (unsigned char)(value & 0x0FF));
 }
 
 inline __attribute__((always_inline)) void show_swr(unsigned int pwr_in, unsigned int ref_in)
@@ -185,7 +182,7 @@ inline __attribute__((always_inline)) void show_swr(unsigned int pwr_in, unsigne
 	// Calculate SWR value
 	if (pwr_in > ref_in) {
 		// SWR calculated with 5 bits resolution right of the decimal point.
-		unsigned int swr = (pwr_in + ref_in) / ((pwr_in - ref_in) >> 5);
+		unsigned int swr = (pwr_in + ref_in) / ((pwr_in - ref_in + 0x0f) >> 5);
 		// SWR must be above 1:1
 		// assert(swr >= 32);
 		if (swr < 48) {
@@ -206,12 +203,9 @@ inline __attribute__((always_inline)) void show_swr(unsigned int pwr_in, unsigne
 			led_value = (unsigned char)((swr - 96) << 2);
 		} else if (swr < 256) {
 			// SWR from 1:5.0 to 1:8.0
-			led_idx = 4;
+			led_idx = 5;
 			// swr * 256 / 96 = approximately floor((swr * 341 + 63) / 128)
-			swr *= 341;
-			swr += 63;
-			swr >>= 7;
-			led_value = (unsigned char)(swr);
+			led_value = (unsigned char)(((swr - 160) * 341 + 63) >> 7);
 		} else {
 			// SWR above 1:8.0
 			// Infinity SWR is shown by default.
@@ -230,8 +224,7 @@ uint16_t correct_diode(uint16_t v)
 	uint16_t corr1, corr2;
 	if (v < 256) {
 		// Interpolating a knee of the diode curve, table is 16 items long.
-		uint16_t addr;
-		addr = (uint16_t)diode_correction_table_rough + ((v & 0x0f0) >> 3);
+		uint16_t addr = (uint16_t)diode_correction_table_rough + ((v & 0x0f0) >> 3);
 		corr1 = __LPM(addr ++);
 		corr1 |= __LPM(addr ++) << 8;
 		if (v < 240) {
@@ -286,6 +279,7 @@ void correct_diode_test()
 			spi_byte(j >> 8);
 			spi_byte(j & 0x0ff);
 			PORTB = (1 << SPI_EN);
+			_delay_ms(100);
 		}
 		for (uint16_t i = 0; i <= 1023 * 8; ++ i) {
 			PORTB = 0;
@@ -321,9 +315,6 @@ int main(void)
 	// Switch off all LEDs.
 	PORTB = 0;
 #endif
-	// Disable all digital input buffers for lower current consumption, as we are using two analog inputs
-	// and three tri-stated output pins.
-	DIDR0 = 0x3f;
 
 	//Initialize Timer/Counter 0, normal mode.
 //	TCCR0A = 0; // No need to set it, it is the initial value after reset.
@@ -340,13 +331,22 @@ int main(void)
 #endif /* DEBUG_SPI */
 
 	sei();
-
+	
 	uint16_t vfwd, vref;
 	uint8_t i;
-	char no_input_power_cnt = 0;
+	unsigned char no_input_power_cnt = 0;
 	// History of forward power for showing the transmit power after key off.
 	// We want to show a power measurement before the input power started to fall off.
 	uint16_t vfwd0, vfwd1, vfwd2;
+
+	// Wait a bit.
+	i = 0x0ff;
+	do {
+		// Disable all digital input buffers for lower current consumption, as we are using two analog inputs
+		// and three tri-stated output pins.
+		DIDR0 = 0x3f;
+		interpolate_baragraph(0, 0);
+	} while (-- i);
 
 	// Main loop, forever:
 	for (;;) {
@@ -421,20 +421,19 @@ no_power:
 		TCNT0 = 13; // This is the time the A/D capture will take.
 		TCCR0B = (1<<CS01)|(1 <<CS00); // clck_io / 64: 73.24Hz period.
 		// By default, switch off the LEDs.
-		led_state.dir1 = ALL_LEDS;
-		led_state.out1 = 0;
-		led_state.timer_capture = 255;
-		if (no_input_power_cnt < 111) {
-			// Less than 1.5 seconds.
+		vfwd = 0;
+		if (no_input_power_cnt < 74) {
+			// Less than 1 seconds.
 			if (++ no_input_power_cnt > 37) {
 				// More than 0.5 second.
 				// Round to a byte. 
-				vfwd0 = (vfwd0 + 0x03f) >> 7;
+				vfwd = (vfwd0 + 0x03f) >> 7;
 				// Now vfwd0 == 256 corresponds to input power of 16 watts,
 				// vfwd0 * vfwd0 == 65536 corresponds to input power of 16 watts,
-				set_baragraph_value((vfwd0 * vfwd0 + 0x07) >> 4);
+				vfwd = (vfwd * vfwd + 0x07) >> 4;
 			}
 		}
+		interpolate_baragraph((unsigned char)(vfwd >> 8), (unsigned char)(vfwd & 0x0FF));
 		// Fall through to wait_end.
 
 wait_end:
@@ -453,6 +452,9 @@ wait_end:
 #endif
 		led_state.dir2use = led_state.dir2;
 		led_state.out2use = led_state.out2;
+		// Clear the Timer 0 Compare A interrupt flag. The flag is normally cleared on Timer 0 Capture A interrupt, 
+		// but the line above disables the Timer 0 Compare A interrupt if the timer capture value is close to overflow.
+		TIFR0 |= 1<<OCF0A;
 		// Next timer run will interrupt on overflow and on compare A if the timer_capture value is not close to full period.
 		TIMSK0 = (led_state.timer_capture < 250) ? ((1<<TOIE0) | (1<<OCIE0A)) : (1<<TOIE0);
 		OCR0A = led_state.timer_capture;
