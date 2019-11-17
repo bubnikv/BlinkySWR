@@ -59,6 +59,13 @@ const uint16_t diode_correction_table_rough[16] PROGMEM = {
 #define ADC_PWR (1<<MUX0 | 1<<MUX1) // Pin 2 (PB3/ADC3) on ATtiny13A
 #define ADC_REF (1<<MUX0) 			// Pin 7 (PB2/ADC1) on ATtiny13A
 
+// #define DISABLE_PULLUPS 
+#ifdef DISABLE_PULLUPS
+	#define PUD_VALUE 0
+#else /* DISABLE_PULLUPS */
+	#define PUD_VALUE (1 << PUD)
+#endif /* DISABLE_PULLUPS */
+
 // DDRB direction config for each LED (1 = output)
 // PORTB output config for each LED (1 = High, 0 = Low)
 const unsigned char led_table[] PROGMEM = {
@@ -79,19 +86,13 @@ struct LedState {
 	unsigned char dir1;
 	// Output state of PORTB pins at the 1st part of the 75 Hz period, to be loaded at the timer overflow event.
 	unsigned char out1;
-	// Direction of PORTB pins at the 2nd part of the 75 Hz period, calculated.
+	// Direction of PORTB pins at the 2nd part of the 75 Hz period.
 	unsigned char dir2;
-	// Output state of PORTB pins at the 2nd part of the 75 Hz period, calculated.
+	// Output state of PORTB pins at the 2nd part of the 75 Hz period.
 	unsigned char out2;
-	// Direction of PORTB pins at the 2nd part of the 75 Hz period, to be loaded by the timer capture A.
-	unsigned char dir2use;
-	// Output state of PORTB pins at the 2nd part of the 75 Hz period, calculated, to be loaded by the timer capture A.
-	unsigned char out2use;
 	// New value of timer capture A to use the dir2 / out2.
 	unsigned char timer_capture;
 };
-
-static struct LedState led_state __attribute__ ((section (".noinit")));
 
 // #define DEBUG_SPI
 // sigrok-cli -d fx2lafw -c samplerate=500k --continuous -P spi:mosi=D5:clk=D7:cs=D6 --protocol-decoder-annotations spi=mosi-data
@@ -124,79 +125,128 @@ void spi_byte(uint8_t byte)
 
 // Switch the charlieplexed LEDs to the 2nd state of the period.
 // The CPU will also wake up from the sleep state.
-ISR(TIM0_COMPA_vect)
+ISR(TIM0_COMPA_vect, ISR_NAKED)
 {
 #ifdef DEBUG_SPI
 #else
-	DDRB  = led_state.dir2use;
-	PORTB = led_state.out2use;
+	// Using the OCR0B and PCMSK to communicate between the main thread and the TIM0_COMPA interrupt.
+	// Using hardware registers instead of global variables is much cheaper, it saves a considerable number
+	// of stack push / pull instructions inside this interrupt handler.
+	// If PCIE is disabled (by default), PCIE should do nothing. Also we are setting only bits of PCMSK to 1 that
+	// correspond to LED bits and that are powered and steady while the bit in PCMSK is set to 1, therefore
+	// the bit shall not have any effect on power consumption.
+    asm volatile(
+		"push r0\n"
+//	DDRB = OCR0B;
+		"in  r0, %0\n"
+		"out %1, r0\n"
+//	PORTB = PCMSK;
+		"in  r0, %2\n"
+		"out %3, r0\n"
+		"pop r0\n"
+		: :
+		"I" (_SFR_IO_ADDR(OCR0B)), "I" (_SFR_IO_ADDR(DDRB)),
+		"I" (_SFR_IO_ADDR(PCMSK)), "I" (_SFR_IO_ADDR(PORTB)));
 #endif /* DEBUG_SPI */
+
+	asm volatile("reti");
 }
 
 // Timer overflow is used to wake up CPU from sleep mode.
 // Disable timer, so that the main thread could differentiate between the wake up after TIM0_COMPA from wake up after TIM0_OVF.
-ISR(TIM0_OVF_vect)
+ISR(TIM0_OVF_vect, ISR_NAKED)
 {
-	// Stop the timer.
-	TCCR0B = 0;
+	// Stop the timer. Using assembly as the AVRGCC creates an unnecessary prologue / epilogue.
+	// Create a "zero" register. Actually AVRGCC expects the R1 register to always contain zero,
+	// so the push / pull and resetting R1 may not be needed.
+	// Using R16 - the first "upper" register, which may be filled with "ldi" instruction to set it to zero,
+	// as "ldi 0" does not change change status register, while the usual "eor r1, r1" does, requiring saving 
+	// and restoring the stack register.
+    asm volatile(
+		"push r16\n"
+		"ldi r16, 0\n" 	// r1 = 0
+		"out %0, r16\n"	// TCCR0B = 0
+		"pop r16\n"
+		"reti\n"
+		: : "I" (_SFR_IO_ADDR(TCCR0B)));
 }
-
-// ADC overflow is used to wake up CPU from sleep mode.
-EMPTY_INTERRUPT(ADC_vect);
 
 // Interpolate baragraph from off state (no LED is lit, led_idx == 0, led_value == 0)
 // to the first LED fully lit (led_idx == 1, led_value == 0),
 // to the 6th LED fully lit (led_idx == 6, led_value == 0).
 // Values over (led_idx == 6, led_value == 0) are clamped to the 6th LED fully lit.
-void interpolate_baragraph(unsigned char led_idx, unsigned char led_value)
+inline __attribute__((always_inline)) void interpolate_baragraph(unsigned char led_idx, unsigned char led_value, struct LedState *led_state)
 {
 	uint16_t addr;
 	if (led_idx > 6)
 		led_idx = 6;
 	addr = (uint16_t)led_table + (led_idx << 1);
-	led_state.dir1 = __LPM(addr ++);
-	led_state.out1 = __LPM(addr ++);
-	led_state.dir2 = __LPM(addr ++);
-	led_state.out2 = __LPM(addr);
+	led_state->dir1 = __LPM(addr ++);
+	led_state->out1 = __LPM(addr ++);
+	led_state->dir2 = __LPM(addr ++);
+	led_state->out2 = __LPM(addr);
 	if (led_value < 128) {
 		// Invert the timer value.
 		led_value = 255 - led_value;
 	} else {
 		// Swap led1_dir/out with led2_dir/out, so that the 1st part of the 75 Hz period will be longer
 		// than the second one
-		unsigned char tmp = led_state.dir1;
-		led_state.dir1 = led_state.dir2;
-		led_state.dir2 = tmp;
-		tmp = led_state.out1;
-		led_state.out1 = led_state.out2;
-		led_state.out2 = tmp;
+		unsigned char tmp = led_state->dir1;
+		led_state->dir1 = led_state->dir2;
+		led_state->dir2 = tmp;
+		tmp = led_state->out1;
+		led_state->out1 = led_state->out2;
+		led_state->out2 = tmp;
 	}
-	led_state.timer_capture = led_value;
+#if 1
+	// Round the LED value to 4 levels per LED interval.
+	// Full intensity (the other LED fully off) will become zero.
+	// 3/4 intensity will be increased to make it more pronounced from 1/2 intensity
+	// due to logarithmic sensitivity of the human eye.
+	led_value = (led_value + 32) & 0x0c0;
+	if (led_value == 192)
+		led_value = 256 - 32;
+#endif
+	led_state->timer_capture = led_value;
 }
 
-inline __attribute__((always_inline)) void show_swr(unsigned int pwr_in, unsigned int ref_in)
+inline __attribute__((always_inline)) unsigned int swr_to_baragraph(unsigned int pwr_in, unsigned int ref_in)
 {
 	// Show SWR infinity by default.
 	unsigned char led_idx   = 6;
+	// No need to initialize led_value, any value with led_idx will fully light the last LED.
 	unsigned char led_value = 0;
 	// Calculate SWR value
 	if (pwr_in > ref_in) {
 		// SWR calculated with 5 bits resolution right of the decimal point.
-		unsigned int swr = (pwr_in + ref_in) / ((pwr_in - ref_in + 0x0f) >> 5);
+		unsigned char swr;
+		{
+			unsigned int num   = pwr_in + ref_in;
+			unsigned int denom = pwr_in - ref_in;
+			unsigned int swrl;
+			// Scale num and denum to full resolution to improve accuracy of the division below.
+			// Scale denom to 5 bits right of the decimal point.
+			unsigned char bits = 5;
+			while ((num & 0x8000) == 0) {
+				num <<= 1;
+				if (-- bits == 0)
+					break;
+			}
+			denom >>= bits;
+			swrl = (num + (denom >> 1)) / denom;
+			swr = (swrl > 255) ? 255 : (unsigned char)swrl;
+		}
 		// SWR must be above 1:1
 		// assert(swr >= 32);
-		if (swr < 48) {
+		if (swr < 64) {
 			// SWR from 1:1 to 1:1.5
-			led_idx = 1;
-			led_value = (unsigned char)((swr - 32) << 4);
-		} else if (swr < 64) {
 			// SWR from 1:1.5 to 1:2.0
-			led_idx = 2;
-			led_value = (unsigned char)((swr - 48) << 4);
+			led_idx = (swr < 48) ? 1 : 2;
+			led_value = (unsigned char)(swr << 4);
 		} else if (swr < 96) {
 			// SWR from 1:2.0 to 1:3.0
 			led_idx = 3;
-			led_value = (unsigned char)((swr - 64) << 3);
+			led_value = (unsigned char)(swr << 3);
 		} else if (swr < 160) {
 			// SWR from 1:3.0 to 1:5.0
 			led_idx = 4;
@@ -204,14 +254,19 @@ inline __attribute__((always_inline)) void show_swr(unsigned int pwr_in, unsigne
 		} else if (swr < 256) {
 			// SWR from 1:5.0 to 1:8.0
 			led_idx = 5;
-			// swr * 256 / 96 = approximately floor((swr * 341 + 63) / 128)
-			led_value = (unsigned char)(((swr - 160) * 341 + 63) >> 7);
+			// swr * 256 / 96 = approximately floor((swr * 683 + 127) / 256)
+			led_value = (unsigned char)(((swr - 160) * 683 + 127) >> 8);
 		} else {
 			// SWR above 1:8.0
 			// Infinity SWR is shown by default.
 		}
 	}
-	interpolate_baragraph(led_idx, led_value);
+#ifdef DEBUG_SPI
+	spi_byte(led_idx);
+	spi_byte(led_value);
+	PORTB = (1 << SPI_EN);
+#endif /* DEBUG_SPI */
+	return ((unsigned int)(led_idx) << 8) | led_value;
 }
 
 // Correct the diode drop by linearly interpolating 
@@ -289,8 +344,14 @@ void correct_diode_test()
 }
 #endif /* DEBUG_SPI */
 
-int main(void)
+void __onreset(void) __attribute__ ((naked)) __attribute__ ((section (".init9")));
+
+void __onreset(void)
 {
+	// Naked start function requires us to set the stack and R1 to zero.
+    asm volatile ( ".set __stack, %0" :: "i" (RAMEND) );
+    asm volatile ( "clr __zero_reg__" );        // R1 set to 0 (GCC expects the R1 register to be set to zero at program start)
+
 	// Interrupts are disabled after reset.
 	
 	// Disable watch dog.
@@ -310,10 +371,11 @@ int main(void)
 	// Disable SPI
 	PORTB = (1 << SPI_EN);
 #else
+	// No need to initialize DDRB and PORTB. DDRB is set to all inputs, therefore no LED is lit after reboot.
 	// Enable LED outputs.
-	DDRB = ALL_LEDS;
+//	DDRB = ALL_LEDS;
 	// Switch off all LEDs.
-	PORTB = 0;
+//	PORTB = 0;
 #endif
 
 	//Initialize Timer/Counter 0, normal mode.
@@ -326,8 +388,12 @@ int main(void)
 	// Power Savings
 //	set_bit(MCUCR, PUD);		// Disable pullups
 
+	// Disable all digital input buffers for lower current consumption, as we are using two analog inputs
+	// and three tri-stated output pins.
+	DIDR0 = 0x3f;
+
 #ifdef DEBUG_SPI
-	correct_diode_test();
+//	correct_diode_test();
 #endif /* DEBUG_SPI */
 
 	sei();
@@ -339,21 +405,12 @@ int main(void)
 	// We want to show a power measurement before the input power started to fall off.
 	uint16_t vfwd0, vfwd1, vfwd2;
 
-	// Wait a bit.
-	i = 0x0ff;
-	do {
-		// Disable all digital input buffers for lower current consumption, as we are using two analog inputs
-		// and three tri-stated output pins.
-		DIDR0 = 0x3f;
-		interpolate_baragraph(0, 0);
-	} while (-- i);
-
 	// Main loop, forever:
 	for (;;) {
 		// Enable ADC, set clock prescaler to 1/16 of the main clock 
 		// (that is with main clock 9.6MHz/8 = 1.2MHz, the ADC sample rate is 1.2MHz / 16 / 13 = 5.77kHz
-		// Enable ADC in power reduction register
-		PRR &= ~(1<<PRADC);
+		// Enable ADC and Timer0 in power reduction register.
+		PRR = 0;
 		// Enable ADC interrupts.
 		ADCSRA = (1<<ADEN)|(1<<ADIE)|(1<<ADPS2);
 		ADMUX = REF_INT | ADC_PWR;    // set reference and channel
@@ -364,17 +421,28 @@ int main(void)
 
 		// Enter Sleep Mode To Trigger ADC Measurement. CPU Will Wake Up From ADC Interrupt.
 		// The first measurement will be thrown away after enabling the ADC.
-		set_sleep_mode(SLEEP_MODE_ADC);
-		sleep_mode();
+		// Instead of calling set_sleep_mode(SLEEP_MODE_ADC) which reads the state of MCUCR, modifies it and writes it back,
+		// just write a constant into MCUCR, as we shall know the state of the MCUCR already.
+		MCUCR = (1 << SM0) | PUD_VALUE;
+		// sleep_mode();
+		MCUCR = (1 << SM0) | (1 << SE) | PUD_VALUE;
+		sleep_cpu();
+		MCUCR = (1 << SM0) | PUD_VALUE;
 
 		i = 8;
 		do {
 			// Enter Sleep Mode To Trigger ADC Measurement. CPU Will Wake Up From ADC Interrupt.
-			sleep_mode();
+			// Instead of calling sleep_mode() which reads the state of MCUCR, modifies it and writes it back,
+			// just write a constant into MCUCR, as we shall know the state of the MCUCR already.
+			MCUCR = (1 << SM0) | (1 << SE) | PUD_VALUE;
+			sleep_cpu();
+			MCUCR = (1 << SM0) | PUD_VALUE;
 			unsigned long vadc = ADC;
+#ifndef DEBUG_SPI
 			if (vadc < 104)
 				// input power lower than 0.2W
 				goto no_power;
+#endif /* DEBUG_SPI */
 			vfwd += vadc;
 		} while (-- i);
 
@@ -382,7 +450,11 @@ int main(void)
 		i = 8;
 		do {
 			// Enter Sleep Mode To Trigger ADC Measurement. CPU Will Wake Up From ADC Interrupt.
-			sleep_mode();
+			// Instead of calling sleep_mode() which reads the state of MCUCR, modifies it and writes it back,
+			// just write a constant into MCUCR, as we shall know the state of the MCUCR already.
+			MCUCR = (1 << SM0) | (1 << SE) | PUD_VALUE;
+			sleep_cpu();
+			MCUCR = (1 << SM0) | PUD_VALUE;
 			unsigned long vadc = ADC;
 			vref += vadc;
 		} while (-- i);
@@ -393,29 +465,32 @@ int main(void)
 		TCCR0B = (1<<CS01)|(1 <<CS00); // clck_io / 64: 73.24Hz period.
 		// Disable ADC until the next 75Hz cycle.
 		ADCSRA = 0;
-		// Disable ADC in power reduction register
-		PRR |= (1<<PRADC);
+		// Disable ADC in power reduction register, enable Timer0.
+		PRR = (1<<PRADC);
 		no_input_power_cnt = 0;
 		vfwd = correct_diode(vfwd);
 		vref = correct_diode(vref);
-		show_swr(vfwd, vref);
+
+		vfwd0 = vfwd1;
+		vfwd1 = vfwd2;
+		vfwd2 = vfwd;
+
 #ifdef DEBUG_SPI
 		spi_byte(vfwd >> 8);
 		spi_byte(vfwd & 0x0ff);
 		spi_byte(vref >> 8);
 		spi_byte(vref & 0x0ff);
 		PORTB = (1 << SPI_EN);
+#else /* DEBUG_SPI */
+		vfwd = swr_to_baragraph(vfwd, vref);
 #endif /* DEBUG_SPI */
-		vfwd0 = vfwd1;
-		vfwd1 = vfwd2;
-		vfwd2 = vfwd;
 		goto wait_end;
 
 no_power:
 		// Disable ADC until the next 75Hz cycle.
 		ADCSRA = 0;
-		// Disable ADC in power reduction register
-		PRR |= (1<<PRADC);
+		// Disable ADC in power reduction register, enable Timer0.
+		PRR = (1<<PRADC);
 		// Process the "no input power" state. Input power lower than 0.2W.
 		// Start the timer to measure the 73.24Hz cycle and modulate the LEDs.
 		TCNT0 = 13; // This is the time the A/D capture will take.
@@ -433,31 +508,59 @@ no_power:
 				vfwd = (vfwd * vfwd + 0x07) >> 4;
 			}
 		}
-		interpolate_baragraph((unsigned char)(vfwd >> 8), (unsigned char)(vfwd & 0x0FF));
 		// Fall through to wait_end.
 
 wait_end:
-		// Wait until the timer overflows.
-		// Two interrupts may wake up the micro from the sleep: Timer0 compare A event and Timer0 overflow.
-		// The Timer0 overflow event handler resets TCCR0B to stop the timer and let us know to exit the sleep loop.
-		do {
-			set_sleep_mode(SLEEP_MODE_IDLE);
-			sleep_mode();
-		} while (TCCR0B);
-		// Set the LED for the next long interval.
-#ifdef DEBUG_SPI
-#else
-		DDRB  = led_state.dir1;
-		PORTB = led_state.out1;
-#endif
-		led_state.dir2use = led_state.dir2;
-		led_state.out2use = led_state.out2;
-		// Clear the Timer 0 Compare A interrupt flag. The flag is normally cleared on Timer 0 Capture A interrupt, 
-		// but the line above disables the Timer 0 Compare A interrupt if the timer capture value is close to overflow.
-		TIFR0 |= 1<<OCF0A;
-		// Next timer run will interrupt on overflow and on compare A if the timer_capture value is not close to full period.
-		TIMSK0 = (led_state.timer_capture < 250) ? ((1<<TOIE0) | (1<<OCIE0A)) : (1<<TOIE0);
-		OCR0A = led_state.timer_capture;
+		{
+			struct LedState led_state;
+			interpolate_baragraph((unsigned char)(vfwd >> 8), (unsigned char)(vfwd & 0x0FF), &led_state);
+
+			// Wait until the timer overflows.
+			// Two interrupts may wake up the micro from the sleep: Timer0 compare A event and Timer0 overflow.
+			// The Timer0 overflow event handler resets TCCR0B to stop the timer and let us know to exit the sleep loop.
+			// Instead of calling set_sleep_mode(SLEEP_MODE_IDLE) which reads the state of MCUCR, modifies it and writes it back,
+			// just write a constant into MCUCR, as we shall know the state of the MCUCR already.
+			MCUCR = PUD_VALUE;
+			do {
+				// sleep_mode();
+				MCUCR = (1 << SE) | PUD_VALUE;
+				sleep_cpu();
+				MCUCR = PUD_VALUE;
+			} while (TCCR0B);
+			// Set the LED for the next long interval.
+	#ifdef DEBUG_SPI
+	#else
+			DDRB  = led_state.dir1;
+			PORTB = led_state.out1;
+	#endif
+			// Use PCMSK and OCR0B to communicate with the Timer0 Cature A interrupt.
+			OCR0B = led_state.dir2;
+			PCMSK = led_state.out2;
+			// Clear the Timer 0 Compare A interrupt flag. The flag is normally cleared on Timer 0 Capture A interrupt, 
+			// but the following line disables the Timer 0 Compare A interrupt if the timer capture value is close to overflow.
+			TIFR0 |= 1<<OCF0A;
+			// Next timer run will interrupt on overflow and on compare A if the timer_capture value is not close to full period.
+			TIMSK0 = led_state.timer_capture ? (1<<TOIE0) | (1<<OCIE0A) : (1<<TOIE0);
+			OCR0A = led_state.timer_capture;
+		}
 		// and continue the next 75Hz cycle starting with ADC sampling.
 	}
+}
+
+// We are saving couple of bytes by avoiding the standard start files and interrupt tables and
+// providing custom substitutes.
+__attribute__((naked,section(".vectors"))) void start(void)
+{
+    asm volatile(
+		"rjmp __onreset\n"	// on reset
+		"reti\n" 			// INT0 External Interrupt Request 0
+		"reti\n" 			// PCINT0 Pin Change Interrupt Request 0
+		"rjmp __vector_3\n" // TIM0_OVF Timer/Counter Overflow
+		"reti\n" 			// EE_RDY EEPROM Ready
+		"reti\n" 			// ANA_COMP Analog Comparator
+		"rjmp __vector_6\n" // TIM0_COMPA Timer/Counter Compare Match A
+		"reti\n" 			// TIM0_COMPB Timer/Counter Compare Match B
+		"reti\n" 			// WDT Watchdog Time-out
+		"reti\n" 			// ADC overflow is used to wake up CPU from sleep mode.
+		);
 }
