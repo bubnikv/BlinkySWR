@@ -122,3 +122,15 @@ poly_corrected = scale * (fw_adc + ppval(vadc_corr_poly1, fw_adc));
 fw_error = fw_corrected - poly_corrected;
 % Interpolation error is lower than 2 LSB of a 15 bit value, reaching resolution of 13 bits.
 assert(max(abs(fw_error)) < 3);
+
+
+% Approximately 0.2W
+vfwd = 104 * 8;
+% Approximately 0.8W
+vfwd = vfwd * 2;
+vref = 0:1:floor(vfwd * 6.3 / 8);
+swr = (vfwd + vref) ./ (vfwd - vref);
+scale = 8;
+div = floor(((vfwd - vref) * scale + 15) / 32);
+swr_approx = floor(((vfwd + vref) * scale + floor(div/2)) ./ div) / 32;
+swr_err = abs(swr - swr_approx) ./ swr;
