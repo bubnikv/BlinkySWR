@@ -418,7 +418,7 @@ void __onreset(void)
 		PRR = 0;
 		// Enable ADC interrupts.
 		ADCSRA = (1<<ADEN)|(1<<ADIE)|(1<<ADPS2);
-		ADMUX = REF_INT | ADC_PWR;    // set reference and channel
+		ADMUX = REF_INT | ADC_REF;    // set reference and channel
 		
 		// Reset the accumulators.
 		vfwd = 0;
@@ -443,15 +443,10 @@ void __onreset(void)
 			sleep_cpu();
 			MCUCR = (1 << SM0) | PUD_VALUE;
 			unsigned long vadc = ADC;
-#ifndef DEBUG_SPI
-			if (vadc < 104)
-				// input power lower than 0.2W
-				goto no_power;
-#endif /* DEBUG_SPI */
-			vfwd += vadc;
+			vref += vadc;
 		} while (-- i);
 
-		ADMUX = REF_INT | ADC_REF;    // set reference and channel
+		ADMUX = REF_INT | ADC_PWR;    // set reference and channel
 		i = 8;
 		do {
 			// Enter Sleep Mode To Trigger ADC Measurement. CPU Will Wake Up From ADC Interrupt.
@@ -461,7 +456,12 @@ void __onreset(void)
 			sleep_cpu();
 			MCUCR = (1 << SM0) | PUD_VALUE;
 			unsigned long vadc = ADC;
-			vref += vadc;
+#ifndef DEBUG_SPI
+			if (vadc < 104)
+				// input power lower than 0.2W
+				goto no_power;
+#endif /* DEBUG_SPI */
+			vfwd += vadc;
 		} while (-- i);
 		
 		// Input power is above 0.2W. Show SWR.
