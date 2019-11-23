@@ -35,6 +35,7 @@
 // for in the firmware).
 // If the input voltage is higher, the current flowing through the 150k resistor into the micro substrate diodes will be negligible.
 
+#include <stdbool.h>
 #include <avr/interrupt.h>
 #include <avr/io.h>
 #include <avr/pgmspace.h>
@@ -83,13 +84,13 @@ const unsigned char led_table[] PROGMEM = {
 // may be addressed effectively by using a common pointer register and fixed offsets.
 struct LedState {
 	// Direction of PORTB pins at the 1st part of the 75 Hz period, to be loaded at the timer overflow event.
-	unsigned char dir1;
 	// Output state of PORTB pins at the 1st part of the 75 Hz period, to be loaded at the timer overflow event.
-	unsigned char out1;
+	// Two bytes are bundled into a single 16bit word, so we save some FLASH space when reading the word from FLASH
+	// as the macro for reading two bytes is shorter than twice a macro for reading a single byte.
+	uint16_t dir_and_out1;
 	// Direction of PORTB pins at the 2nd part of the 75 Hz period.
-	unsigned char dir2;
 	// Output state of PORTB pins at the 2nd part of the 75 Hz period.
-	unsigned char out2;
+	uint16_t dir_and_out2;
 	// New value of timer capture A to use the dir2 / out2.
 	unsigned char timer_capture;
 };
@@ -181,32 +182,28 @@ inline __attribute__((always_inline)) void interpolate_baragraph(unsigned char l
 	if (led_idx > 6)
 		led_idx = 6;
 	addr = (uint16_t)led_table + (led_idx << 1);
-	led_state->dir1 = __LPM(addr ++);
-	led_state->out1 = __LPM(addr ++);
-	led_state->dir2 = __LPM(addr ++);
-	led_state->out2 = __LPM(addr);
+	//FIXME optimize the LPM instruction to utilize the Z+ register post increment instead of addr ++.
+	led_state->dir_and_out1 = pgm_read_word_near(addr);
+	addr += 2;
+	led_state->dir_and_out2 = pgm_read_word_near(addr);
 	if (led_value < 128) {
 		// Invert the timer value.
 		led_value = 255 - led_value;
 	} else {
 		// Swap led1_dir/out with led2_dir/out, so that the 1st part of the 75 Hz period will be longer
 		// than the second one
-		unsigned char tmp = led_state->dir1;
-		led_state->dir1 = led_state->dir2;
-		led_state->dir2 = tmp;
-		tmp = led_state->out1;
-		led_state->out1 = led_state->out2;
-		led_state->out2 = tmp;
+		uint16_t tmp = led_state->dir_and_out1;
+		led_state->dir_and_out1 = led_state->dir_and_out2;
+		led_state->dir_and_out2 = tmp;
 	}
-#if 1
 	// Round the LED value to 4 levels per LED interval.
 	// Full intensity (the other LED fully off) will become zero.
 	// 3/4 intensity will be increased to make it more pronounced from 1/2 intensity
 	// due to logarithmic sensitivity of the human eye.
+	// Maximum level will be rounded to zero. For zero led_value, the timer capture timer must not trigger!
 	led_value = (led_value + 32) & 0x0c0;
 	if (led_value == 192)
 		led_value = 256 - 32;
-#endif
 	led_state->timer_capture = led_value;
 }
 
@@ -280,12 +277,12 @@ uint16_t correct_diode(uint16_t v)
 	if (v < 256) {
 		// Interpolating a knee of the diode curve, table is 16 items long.
 		uint16_t addr = (uint16_t)diode_correction_table_rough + ((v & 0x0f0) >> 3);
-		corr1 = __LPM(addr ++);
-		corr1 |= __LPM(addr ++) << 8;
+		corr1 = pgm_read_word_near(addr);
 		if (v < 240) {
 			// Read two items from the "rough" table.
-			corr2 = __LPM(addr ++);
-			corr2 |= __LPM(addr) << 8;
+			//FIXME optimize the LPM instruction to utilize the Z+ register post increment instead of addr ++.
+			addr += 2;
+			corr2 = pgm_read_word_near(addr);
 		} else {
 			// Read the first item from the EEPROM.
 			EEARL = 0;
@@ -346,6 +343,10 @@ void correct_diode_test()
 
 void __onreset(void) __attribute__ ((naked)) __attribute__ ((section (".init9")));
 
+#define TIME_SWITCH_OFF_AFTER_KEY_UP 		 74
+#define TIME_LED_BLANKED_BETWEEN_SWR_AND_PWR 37
+#define TIME_TO_SIGNAL_STABLE	 			 20
+
 void __onreset(void)
 {
 	// Naked start function requires us to set the stack and R1 to zero.
@@ -398,12 +399,16 @@ void __onreset(void)
 
 	sei();
 	
-	uint16_t vfwd, vref;
-	uint8_t i;
-	unsigned char no_input_power_cnt = 0;
+	uint16_t 		vfwd, vref;
+	uint8_t 		i;
+	unsigned char 	no_input_power_cnt = 0;
+	unsigned char 	signal_steady_cntr = TIME_TO_SIGNAL_STABLE;
 	// History of forward power for showing the transmit power after key off.
 	// We want to show a power measurement before the input power started to fall off.
-	uint16_t vfwd0, vfwd1, vfwd2;
+	uint16_t 		vfwd0, vfwd1, vfwd2;
+	// State machine for showing the range of the power reading after key up by scrolling the LEDs up or down.
+	unsigned char 	power_scroll_cntr;
+	bool 			power_scroll_down;
 
 	// Main loop, forever:
 	for (;;) {
@@ -467,23 +472,39 @@ void __onreset(void)
 		ADCSRA = 0;
 		// Disable ADC in power reduction register, enable Timer0.
 		PRR = (1<<PRADC);
+		
 		no_input_power_cnt = 0;
-		vfwd = correct_diode(vfwd);
-		vref = correct_diode(vref);
 
-		vfwd0 = vfwd1;
-		vfwd1 = vfwd2;
-		vfwd2 = vfwd;
+		if (signal_steady_cntr == 0) {
+			// Signal available, steady state. Show SWR.
+			vfwd = correct_diode(vfwd);
+			vref = correct_diode(vref);
 
-#ifdef DEBUG_SPI
-		spi_byte(vfwd >> 8);
-		spi_byte(vfwd & 0x0ff);
-		spi_byte(vref >> 8);
-		spi_byte(vref & 0x0ff);
-		PORTB = (1 << SPI_EN);
-#else /* DEBUG_SPI */
-		vfwd = swr_to_baragraph(vfwd, vref);
-#endif /* DEBUG_SPI */
+			vfwd0 = vfwd1;
+			vfwd1 = vfwd2;
+			vfwd2 = vfwd;
+
+	#ifdef DEBUG_SPI
+			spi_byte(vfwd >> 8);
+			spi_byte(vfwd & 0x0ff);
+			spi_byte(vref >> 8);
+			spi_byte(vref & 0x0ff);
+			PORTB = (1 << SPI_EN);
+	#else /* DEBUG_SPI */
+			vfwd = swr_to_baragraph(vfwd, vref);
+	#endif /* DEBUG_SPI */
+		} else {
+			// Blank the display.
+			vfwd = 0;
+			if (-- signal_steady_cntr == 0) {			
+				// Ready to show SWR and power when the next valid fwd / ref values are measured.
+				// Clear the power value history.
+				vfwd0 = 0;
+				vfwd1 = 0;
+				vfwd2 = 0;
+			}
+		}
+
 		goto wait_end;
 
 no_power:
@@ -497,15 +518,38 @@ no_power:
 		TCCR0B = (1<<CS01)|(1 <<CS00); // clck_io / 64: 73.24Hz period.
 		// By default, switch off the LEDs.
 		vfwd = 0;
-		if (no_input_power_cnt < 74) {
+		if (no_input_power_cnt < TIME_SWITCH_OFF_AFTER_KEY_UP) {
 			// Less than 1 seconds.
-			if (++ no_input_power_cnt > 37) {
+			// Update the "steady signal" counter.
+			if (++ signal_steady_cntr > TIME_TO_SIGNAL_STABLE)
+				signal_steady_cntr = TIME_TO_SIGNAL_STABLE;
+			if (++ no_input_power_cnt == TIME_LED_BLANKED_BETWEEN_SWR_AND_PWR) {
 				// More than 0.5 second.
 				// Round to a byte. 
-				vfwd = (vfwd0 + 0x03f) >> 7;
+				vfwd0 = (vfwd0 + 0x03f) >> 7;
 				// Now vfwd0 == 256 corresponds to input power of 16 watts,
 				// vfwd0 * vfwd0 == 65536 corresponds to input power of 16 watts,
-				vfwd = (vfwd * vfwd + 0x07) >> 4;
+				vfwd0 *= vfwd0;
+				power_scroll_cntr = 6;
+				power_scroll_down = false;
+				if (vfwd0 > 24576) {
+					// Measured power is over 6 watts, show 2x scale (2 to 12 Watts).
+					vfwd0 = (vfwd0 + 0x0f) >> 5;
+				} else if (vfwd0 < 4096) {
+					// Measured power is below 1 watt, show /4 scale (0.25 to 1.5 Watts).
+					power_scroll_down = true;
+					vfwd0 = (vfwd0 + 0x01) >> 2;
+				} else {
+					// Show 1x scale (1 to 6 Watts).
+					power_scroll_cntr = 0;
+					vfwd0 = (vfwd0 + 0x07) >> 4;
+				}
+			} else if (no_input_power_cnt > TIME_LED_BLANKED_BETWEEN_SWR_AND_PWR) {
+				if (power_scroll_cntr > 0) {
+					vfwd = (power_scroll_down ? power_scroll_cntr : 6 - power_scroll_cntr) << 8;
+					-- power_scroll_cntr;
+				} else
+					vfwd = vfwd0;
 			}
 		}
 		// Fall through to wait_end.
@@ -530,12 +574,12 @@ wait_end:
 			// Set the LED for the next long interval.
 	#ifdef DEBUG_SPI
 	#else
-			DDRB  = led_state.dir1;
-			PORTB = led_state.out1;
+			DDRB  = (unsigned char)led_state.dir_and_out1;
+			PORTB = (unsigned char)(led_state.dir_and_out1 >> 8);
 	#endif
 			// Use PCMSK and OCR0B to communicate with the Timer0 Cature A interrupt.
-			OCR0B = led_state.dir2;
-			PCMSK = led_state.out2;
+			OCR0B = (unsigned char)led_state.dir_and_out2;
+			PCMSK = (unsigned char)(led_state.dir_and_out2 >> 8);
 			// Clear the Timer 0 Compare A interrupt flag. The flag is normally cleared on Timer 0 Capture A interrupt, 
 			// but the following line disables the Timer 0 Compare A interrupt if the timer capture value is close to overflow.
 			TIFR0 |= 1<<OCF0A;
