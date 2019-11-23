@@ -24,7 +24,9 @@
 // Sampling 2x16 samples per 75kHz period seems to fit the first half of the 75kHz period with some reserve,
 // but that may be sensitive to a compiler optimizations. We rather chose a conservative approach of sampling
 // just 2x6 samples, which also leads to lower current consumption, as the whole sampling & SWR processing
-// seems to fit into roughly 1/3 of the 75kHz period.
+// seems to fit into roughly 1/3 of the 75 kHz period. The time spent by the sampling & SWR processing was verified with a logic
+// analyser. As it only takes 1/3 of the 75 kHz period, there is a healthy buffer for situations, where the calculation
+// takes longer due to different program paths being taken.
 
 // Input resistive divider 10k / 150k provides the required 10k input impedance to the ADC converter (see AtTiny13A datasheet).
 // At 7W input power, the peak voltage at SWR 2:1 with the resistive bridge open is maximum 35.28V peak with the assumption,
@@ -69,7 +71,7 @@ const uint16_t diode_correction_table_rough[16] PROGMEM = {
 
 // DDRB direction config for each LED (1 = output)
 // PORTB output config for each LED (1 = High, 0 = Low)
-const unsigned char led_table[] PROGMEM = {
+const unsigned char led_table[16] PROGMEM = {
   ALL_LEDS, 					0, 				// all LEDs off
   ( 1<<LINE_A | 1<<LINE_B ), 	( 1<<LINE_B ), 	// LED 0
   ( 1<<LINE_A | 1<<LINE_B ), 	( 1<<LINE_A ), 	// LED 1
@@ -137,14 +139,14 @@ ISR(TIM0_COMPA_vect, ISR_NAKED)
 	// correspond to LED bits and that are powered and steady while the bit in PCMSK is set to 1, therefore
 	// the bit shall not have any effect on power consumption.
     asm volatile(
-		"push r0\n"
+		"push r16\n"
 //	DDRB = OCR0B;
-		"in  r0, %0\n"
-		"out %1, r0\n"
+		"in  r16, %0\n"
+		"out %1, r16\n"
 //	PORTB = PCMSK;
-		"in  r0, %2\n"
-		"out %3, r0\n"
-		"pop r0\n"
+		"in  r16, %2\n"
+		"out %3, r16\n"
+		"pop r16\n"
 		: :
 		"I" (_SFR_IO_ADDR(OCR0B)), "I" (_SFR_IO_ADDR(DDRB)),
 		"I" (_SFR_IO_ADDR(PCMSK)), "I" (_SFR_IO_ADDR(PORTB)));
@@ -331,7 +333,7 @@ void correct_diode_test()
 			spi_byte(j >> 8);
 			spi_byte(j & 0x0ff);
 			PORTB = (1 << SPI_EN);
-			_delay_ms(100);
+//			_delay_ms(100);
 		}
 		for (uint16_t i = 0; i <= 1023 * 8; ++ i) {
 			PORTB = 0;
@@ -466,7 +468,7 @@ void __onreset(void)
 		
 		// Input power is above 0.2W. Show SWR.
 		// Start the timer to measure the 73.24Hz cycle and modulate the LEDs.
-		TCNT0 = 72; // This is the time the A/D capture will take.
+		TCNT0 = 69; // This is the time the A/D capture will take.
 		TCCR0B = (1<<CS01)|(1 <<CS00); // clck_io / 64: 73.24Hz period.
 		// Disable ADC until the next 75Hz cycle.
 		ADCSRA = 0;
@@ -514,7 +516,7 @@ no_power:
 		PRR = (1<<PRADC);
 		// Process the "no input power" state. Input power lower than 0.2W.
 		// Start the timer to measure the 73.24Hz cycle and modulate the LEDs.
-		TCNT0 = 13; // This is the time the A/D capture will take.
+		TCNT0 = 42; // This is the time the A/D capture will take.
 		TCCR0B = (1<<CS01)|(1 <<CS00); // clck_io / 64: 73.24Hz period.
 		// By default, switch off the LEDs.
 		vfwd = 0;
