@@ -174,6 +174,25 @@ ISR(TIM0_OVF_vect, ISR_NAKED)
 		: : "I" (_SFR_IO_ADDR(TCCR0B)));
 }
 
+// This macro is supposed to save a bit of flash due to the successive increment of the Z register.
+// If two pgm_read_word() macros were to be used, the address would have to be incremented by 2 between
+// the two pgm_read_word() calls.
+#define pgm_read_two_successive_words(addr, data1, data2) \
+	do {								\
+		asm volatile( 					\
+			"lpm %A0, Z+" 	"\n\t" 		\
+			"lpm %B0, Z+" 	"\n\t" 		\
+			: "=r" (data1), "=z" (addr) \
+			: "1" (addr) 				\
+		); 								\
+		asm volatile( 					\
+			"lpm %A0, Z+" 	"\n\t" 		\
+			"lpm %B0, Z" 	"\n\t" 		\
+			: "=r" (data2) 				\
+			: : "r30", "r31"			\
+		); 								\
+	} while (0)
+
 // Interpolate baragraph from off state (no LED is lit, led_idx == 0, led_value == 0)
 // to the first LED fully lit (led_idx == 1, led_value == 0),
 // to the 6th LED fully lit (led_idx == 6, led_value == 0).
@@ -184,10 +203,7 @@ inline __attribute__((always_inline)) void interpolate_baragraph(unsigned char l
 	if (led_idx > 6)
 		led_idx = 6;
 	addr = (uint16_t)led_table + (led_idx << 1);
-	//FIXME optimize the LPM instruction to utilize the Z+ register post increment instead of addr ++.
-	led_state->dir_and_out1 = pgm_read_word_near(addr);
-	addr += 2;
-	led_state->dir_and_out2 = pgm_read_word_near(addr);
+	pgm_read_two_successive_words(addr, led_state->dir_and_out1, led_state->dir_and_out2);
 	if (led_value < 128) {
 		// Invert the timer value.
 		led_value = 255 - led_value;
@@ -205,7 +221,7 @@ inline __attribute__((always_inline)) void interpolate_baragraph(unsigned char l
 	// Maximum level will be rounded to zero. For zero led_value, the timer capture timer must not trigger!
 	led_value = (led_value + 32) & 0x0c0;
 	if (led_value == 192)
-		led_value = 256 - 32;
+		led_value = 256 - 20;
 	led_state->timer_capture = led_value;
 }
 
@@ -226,14 +242,17 @@ inline __attribute__((always_inline)) unsigned int swr_to_baragraph(unsigned int
 			// Scale num and denum to full resolution to improve accuracy of the division below.
 			// Scale denom to 5 bits right of the decimal point.
 			unsigned char bits = 5;
-			while ((num & 0x8000) == 0) {
+			// Cannot allow the num to grow up to the highest bit, as the num would possibly
+			// overflow below when calculating swrl = (num + (denom >> 1)) / denom.
+			//FIXME here we are potentially losing 1 bit of resolution.
+			while ((num & 0x0c000) == 0) {
 				num <<= 1;
 				if (-- bits == 0)
 					break;
 			}
 			denom >>= bits;
 			swrl = (num + (denom >> 1)) / denom;
-			swr = (swrl > 255) ? 255 : (unsigned char)swrl;
+			swr = (denom == 0 || swrl > 255) ? 255 : (unsigned char)swrl;
 		}
 		// SWR must be above 1:1
 		// assert(swr >= 32);
@@ -279,18 +298,13 @@ uint16_t correct_diode(uint16_t v)
 	if (v < 256) {
 		// Interpolating a knee of the diode curve, table is 16 items long.
 		uint16_t addr = (uint16_t)diode_correction_table_rough + ((v & 0x0f0) >> 3);
-		corr1 = pgm_read_word_near(addr);
-		if (v < 240) {
-			// Read two items from the "rough" table.
-			//FIXME optimize the LPM instruction to utilize the Z+ register post increment instead of addr ++.
-			addr += 2;
-			corr2 = pgm_read_word_near(addr);
-		} else {
+		pgm_read_two_successive_words(addr, corr1, corr2);
+		if (v >= 240) {
 			// Read the first item from the EEPROM.
 			EEARL = 0;
 			EECR |= 1<<EERE;
 			corr2 = EEDR;
-			++ EEARL;
+			EEARL = 1;
 			EECR |= 1<<EERE;
 			corr2 |= EEDR << 8;
 		}
@@ -299,17 +313,18 @@ uint16_t correct_diode(uint16_t v)
 	} else {
 		// Read two successive entries of the diode correction table from EEPROM, table is 32 items long.
 		// Address of the correction value in the EEPROM.
-		EEARL = (unsigned char)(((v >> (13 - 5 - 1)) & 0x0fe) - 2);
+		unsigned char addr = (unsigned char)(((v >> (13 - 5 - 1)) & 0x0fe) - 2);
+		EEARL = addr ++;
 		// Start eeprom read by writing EERE
 		EECR |= 1<<EERE;
 		corr1 = EEDR;
-		++ EEARL;
+		EEARL = addr ++;
 		EECR |= 1<<EERE;
 		corr1 |= EEDR << 8;
-		++ EEARL;
+		EEARL = addr ++;
 		EECR |= 1<<EERE;
 		corr2 = EEDR;
-		++ EEARL;
+		EEARL = addr ++;
 		EECR |= 1<<EERE;
 		corr2 |= EEDR << 8;
 		// Now use the lowest 8 bits of the measurement value to interpolate linearly.
@@ -498,7 +513,7 @@ void __onreset(void)
 		} else {
 			// Blank the display.
 			vfwd = 0;
-			if (-- signal_steady_cntr == 0) {			
+			if (-- signal_steady_cntr == 0) {
 				// Ready to show SWR and power when the next valid fwd / ref values are measured.
 				// Clear the power value history.
 				vfwd0 = 0;
