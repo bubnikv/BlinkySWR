@@ -201,3 +201,34 @@ The device works somehow, but it is far from optimal. The micro is powered by a 
 There is a lot of work to be done on fine tuning the firmware and possibly the circuit. The firmware should utilize power saving features of the micro to a full extent, it should run the A/D conversion with all the processing disabled to lower the noise, it should use averaging to improve read out SNR, the diode detector read out shall be linearised. Currently the electronics draws around 2.5mA from the transceiver with 1mA flowing through the LEDs. To lower the micro current below the planned 1.5mA, as low as possible Vcc shall be used, likely around 2.2 to 2.5V. The micro would work from 1.8V, but a little bit higher voltag is required to have enough of current regulation on the resistors powering the low voltage red LEDs. The CPU shall be operated at as low as possible CPU frequency.
 
 It is an interesting engineering optimization task, it is a lot of fun, and it is manageable due to the simplicity of the circuit and the ATtiny13A micro. As always, I will be thankful for constructive criticism of my endeavors.
+
+----------------------
+
+I ran some simulation of the power recovery circuit in ltspice. With the assumption, that the controller driving the LED baragraph draws 1.2mA at 2.4V, the following peak currents of the power recovery diodes were simulated, and the following harmonic distortion values were simulated as well. Only 3rd harmonic levels below the carrier are shown as they are most pronounced. Long story short, the worst harmonic simulation was 3rd harmonic at -34dB below the carrier. I would say this is a pretty harmless value for a circuit, that is inserted between the transceiver and antenna only during antenna adjustment.
+
+1.2mA at 2.4V is a realistic value if all the AtTiny13A power saving features are used and LED current is limited to 1mA.
+
+At 1W input power:
+At SWR 1:1, the diode peak current is 7.4mA, which is 3.7% of 200mA input peak current, and 3rd harmonic introduced by the power recovery circuit is -36dB below the carrier.
+When antenna open, the diode peak current is 8,3mA, which is 6.1% of 135mA input peak current, and 3rd harmonic introduced by the power recovery circuit is -34dB below the carrier. This is the worst distortion value.
+When antenna shorted, the diode peak current is 7mA, which is 2.9% of 240mA input peak current, and 3rd harmonic introduced by the power recovery circuit is -39dB below the carrier.
+
+At 10W input power:
+At SWR 1:1, the diode peak current is 11.5mA, which is 1.8% of 636mA input peak current, and 3rd harmonic introduced by the power recovery circuit is -36dB below the carrier.
+When antenna open, the diode peak current is 13mA, which is 3% of 427mA input peak current, and 3rd harmonic introduced by the power recovery circuit is -35dB below the carrier.
+When antenna shorted, the diode peak current is 11mA, which is 1.4% of 764mA input peak current, and 3rd harmonic introduced by the power recovery circuit is -36dB below the carrier.
+
+-----------------------------
+
+* Zdokumentovat spotřebu při max SWR (svítí jedna LED): 940 mA
+* Zdokumentovat proud přez tu poslední LED: 1.17V na 1.5kOhm = 0.78mA -> 160mA na procesoru
+* Znovu ověřit převodní tabulku.
+* Ověřit simulaci SWR trimrem pro různé úrovně vstupního výkonu.
+* Naladit svítivost méně nasvětlené LEDky z páru. Moc málo?
+Programovátko + naprogramovat nějaký kusy? (krajní piny na jedné straně, všechy piny na druhé).
+
+Zdokumentovat UI a omezení:
+* nefunguje na SSB, potřebuje steady signál, nefunguje na CW tečky a čárky (ověř): Funguje na pomalejší CW, ale při key off glitches
+* pro měření výkonu filtruje poslední 3 samply, spočítej spoždění, jak pozvolné může být CW shaping. (4 poslední samply nad 0.2W), 3x14ms=40ms.
+
+
