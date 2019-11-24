@@ -360,9 +360,16 @@ void correct_diode_test()
 
 void __onreset(void) __attribute__ ((naked)) __attribute__ ((section (".init9")));
 
-#define TIME_SWITCH_OFF_AFTER_KEY_UP 		 74
+// How many samples with valid SWR will be thrown away before the power supply capacitors charge enough
+// to not influence the measurement visibly. One sample takes roughly 14ms.
+// Lower time will be required with lower power supply capacitors or with lower current limiting resistor
+// powering the controller.
+#define TIME_TO_SIGNAL_STABLE	 			 3 // 5
+// Blank for roughly half second after key up and before showing the detected power.
 #define TIME_LED_BLANKED_BETWEEN_SWR_AND_PWR 37
-#define TIME_TO_SIGNAL_STABLE	 			 20
+// Switch off all LEDs roughly after a second after key up, so that the intensity of the LEDs when showing
+// the detected power will not visibly decrease.
+#define TIME_SWITCH_OFF_AFTER_KEY_UP 		 74
 
 void __onreset(void)
 {
