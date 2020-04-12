@@ -8,7 +8,7 @@ Circuit revision 0.2-S, firmware version 1.0
 
 ## Introduction
 
-The BlinkySWR is an accurate microprocessor based replacement of the famous Tayloe SWR bridge. As such, the SWR presented by the bridge to the transceiver never exceeds 1:2. The BlinkySWR was designed with a no-tuner or limited tuning range back packing antenna installations in mind, where a Tayloe SWR bridge may not reveal the true SWR.
+The BlinkySWR is an accurate microprocessor based replacement of the famous Tayloe SWR bridge. As such, the SWR presented by the bridge to the transceiver never exceeds 1:2. The BlinkySWR was designed with a no-tuner or limited tuning range back packing antenna installations in mind, where a Tayloe SWR bridge may not reveal the true SWR. The circuit was inspired by the [N2CX (SK) Rainbow Tuner](http://www.njqrp.club/Rainbow/rb_home.html), while being much simpler and self powered.
 
 The SWR and power is shown by a 6 LED baragraph, where 21 discrete levels of SWR presented by interpolating intensities of neighboring LEDs, thus allowing for an analog-like SWR tuning experience. The SWR bridge electronics is powered by rectifying a tiny bit of the RF power. After transceiver key off, the measured transmit power is shortly indicated on the baragraph by discharging on board large capacitors.
 
@@ -76,8 +76,9 @@ The BlinkySWR board fits two SMA connectors. These SMA connectors and SMA pig ta
 
 ## Theory of operation
 
-
 ### Circuit
+
+![alt text](blinkyswr-schematic-0.2-S.png)
 
 The BlinkySWR implements a classic resistive SWR bridge with a little twist.  Usually the bridge peak voltages are sampled against the transceiver / antenna ground level, while the BlinkySWR creates an artificial ground at half the transceiver / ground voltage level. The BlinkySWR circuit is powered by harvesting roughly 1.2mA from the transceiver and the artificial ground allows for full wave rectification of the transceiver output, therefore lowering distortion of the transceiver sine waveform caused by the energy harvesting circuit. Simulation of the energy harvesting circuit produced 3rd harmonic between -34dB and -39dB below the carrier.
 
