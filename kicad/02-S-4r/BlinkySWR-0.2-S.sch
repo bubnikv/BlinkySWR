@@ -162,7 +162,7 @@ F 3 "" H 8675 5875 60  0000 C CNN
 	-1   0    0    -1  
 $EndComp
 Text GLabel 10375 5325 2    50   Input ~ 0
-+3V
++2,5V
 Wire Wire Line
 	8575 5325 8675 5325
 Wire Wire Line
@@ -191,7 +191,7 @@ F 5 "C17414" H 6450 6075 50  0001 C CNN "LCSC"
 	-1   0    0    -1  
 $EndComp
 Text GLabel 6450 6300 3    50   Input ~ 0
-+3V
++2,5V
 Text GLabel 6575 5525 0    39   Input ~ 0
 REF
 Text GLabel 6575 5625 0    39   Input ~ 0
@@ -580,8 +580,6 @@ Wire Wire Line
 	3800 2375 4800 2375
 Text GLabel 4975 4000 2    50   Input ~ 0
 FW
-Wire Wire Line
-	4800 3550 2300 3550
 Connection ~ 4800 3550
 Wire Wire Line
 	4800 3475 4800 3550
@@ -589,7 +587,7 @@ Connection ~ 2225 4475
 Wire Wire Line
 	2225 4475 1850 4475
 Text GLabel 1850 4475 0    50   Input ~ 0
-+3V
++2,5V
 Wire Wire Line
 	2750 4825 3800 4825
 Connection ~ 2750 4825
@@ -918,22 +916,6 @@ Connection ~ 9925 5325
 Wire Wire Line
 	9925 5325 10100 5325
 $Comp
-L mechanical:Mounting_Hole_PAD MK1
-U 1 1 5E1D1145
-P 2300 3325
-F 0 "MK1" H 2400 3374 50  0000 L CNN
-F 1 "Mounting_Hole_PAD 3.2mm*" H 2400 3283 50  0000 L CNN
-F 2 "Mounting_Holes:MountingHole_3.2mm_M3_Pad_Via" H 2300 3325 60  0001 C CNN
-F 3 "" H 2300 3325 60  0001 C CNN
-	1    2300 3325
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	2300 3425 2300 3550
-Connection ~ 2300 3550
-Wire Wire Line
-	2300 3550 1825 3550
-$Comp
 L device:CP_Small C9
 U 1 1 5D93586C
 P 10100 5600
@@ -1049,4 +1031,6 @@ F 5 "C18019" H 7675 1900 50  0001 C CNN "LCSC"
 $EndComp
 Wire Wire Line
 	7675 2050 7675 2175
+Wire Wire Line
+	1825 3550 4800 3550
 $EndSCHEMATC
