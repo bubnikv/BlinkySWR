@@ -1,0 +1,4 @@
+(sym_lib_table
+  (lib (name iak-swr-meter-rescue)(type Legacy)(uri ${KIPRJMOD}/iak-swr-meter-rescue.lib)(options "")(descr ""))
+  (lib (name BlinkySWR-0.1-rescue)(type Legacy)(uri ${KIPRJMOD}/BlinkySWR-0.1-rescue.lib)(options "")(descr ""))
+)
