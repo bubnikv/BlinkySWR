@@ -65,6 +65,8 @@ The LEDs are tiny and a bit challenging to solder, so we provided two spares. Th
 
 First deposit a tiny bit of solder onto the 6 pads closer to the controller. Then hold a LED with the tweezers and re-melt the already deposited bit of solder to tack one LED terminal to the board. Then solder the other LED terminal. You may then re-melt and possibly add yet a bit more solder to the 1st LED terminal. Repeat another five times.
 
+![BlinkySWR correctly assembled board closeup](blinkyswr-assembled-closeup-0.2-S.jpg)
+
 ## Application examples
 
 The BlinkySWR could either be installed inside an antenna tuner as a replacement of the Tayloe SWR bridge, or it could be plugged between the transceiver and antenna, antenna tuner or antenna balun. The BlinkySWR uses a resistive SWR bridge, which consumes 3/4 of transceiver power, therefore the SWR bridge should be plugged out of the antenna circuit during normal transmit operation.
@@ -78,7 +80,7 @@ The BlinkySWR board fits two SMA connectors. These SMA connectors and SMA pig ta
 
 ### Circuit
 
-![alt text](blinkyswr-schematic-0.2-S.png)
+![BlinkySWR schematic](blinkyswr-schematic-0.2-S.png)
 
 The BlinkySWR implements a classic resistive SWR bridge with a little twist.  Usually the bridge peak voltages are sampled against the transceiver / antenna ground level, while the BlinkySWR creates an artificial ground at half the transceiver / ground voltage level. The BlinkySWR circuit is powered by harvesting roughly 1.2mA from the transceiver and the artificial ground allows for full wave rectification of the transceiver output, therefore lowering distortion of the transceiver sine waveform caused by the energy harvesting circuit. Simulation of the energy harvesting circuit produced 3rd harmonic between -34dB and -39dB below the carrier.
 
