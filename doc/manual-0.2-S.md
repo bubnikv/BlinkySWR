@@ -76,11 +76,15 @@ The BlinkySWR board is especially useful with end fed half wave tuners, which ha
 
 The BlinkySWR board fits two SMA connectors. These SMA connectors and SMA pig tails could be cheaply obtained on ebay or aliexpress. A piece of thin coaxial cable could be soldered to the BlinkySWR board directly as well.
 
+## Design documents
+
+For some reason github mangles the schematic. Please follow [this link to download schematic in PNG](https://raw.githubusercontent.com/bubnikv/BlinkySWR/master/doc/blinkyswr-schematic-0.2-S.png) or [this link to download schematic in PDF](https://rawgit.com/bubnikv/BlinkySWR/master/kicad/02-S-4r/BlinkySWR-0.2-S.pdf).
+
+A complete kicad design could be [downloaded from here](https://remoteqth.com/download-count.php?Down=hw/BlinkySWR-0.2-S-4r.zip), and an interactive board view with BOM [is available here](https://rawgit.com/bubnikv/BlinkySWR/master/kicad/02-S-4r/ibom.html).
+
 ## Theory of operation
 
 ### Circuit
-
-![BlinkySWR schematic](blinkyswr-schematic-0.2-S.png)
 
 The BlinkySWR implements a classic resistive SWR bridge with a little twist.  Usually the bridge peak voltages are sampled against the transceiver / antenna ground level, while the BlinkySWR creates an artificial ground at half the transceiver / ground voltage level. The BlinkySWR circuit is powered by harvesting roughly 1.2mA from the transceiver and the artificial ground allows for full wave rectification of the transceiver output, therefore lowering distortion of the transceiver sine waveform caused by the energy harvesting circuit. Simulation of the energy harvesting circuit produced 3rd harmonic between -34dB and -39dB below the carrier.
 
